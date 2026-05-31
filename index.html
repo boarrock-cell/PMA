@@ -1,0 +1,2782 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMATCGV_0113_951971</title>
+    <style>
+        /* ==========================================
+           🎨 CSS STYLES (UI DESIGN) - BASE & DESKTOP
+           ========================================== */
+        :root {
+            --bg-color: #121212; --panel-bg: #1e1e1e; --text-main: #e0e0e0;
+            --highlight: #00ffcc; --danger: #ff4d4d; --p1-color: #4da6ff; --p2-color: #ff9933;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; overflow: hidden; }
+        
+        .fullscreen-screen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 9999; display: flex; align-items: center; justify-content: center;
+        }
+        #cover-screen {
+            background: url('cover101.jpg') no-repeat center center;
+            background-size: cover; background-color: #111;
+        }
+        .cover-content {
+            background: rgba(0,0,0,0.75); padding: 50px; border-radius: 20px;
+            text-align: center; border: 2px solid var(--highlight);
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
+            backdrop-filter: blur(5px);
+            max-width: 90%;
+            position: relative;
+        }
+        #player-name-input {
+            padding: 15px; font-size: 1.3em; border-radius: 8px; border: 2px solid #555;
+            margin-bottom: 20px; width: 80%; max-width: 300px; text-align: center;
+            background: #222; color: #fff; outline: none; transition: 0.3s;
+        }
+        #player-name-input:focus { border-color: var(--highlight); box-shadow: 0 0 10px var(--highlight); }
+        .cover-btn { font-size: 1.5em !important; padding: 15px 40px !important; text-transform: uppercase; letter-spacing: 2px; width: 100%; margin-bottom: 15px; }
+
+        .number-stepper { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 15px 0; }
+        .stepper-btn { background: #333; color: white; border: 1px solid var(--highlight); padding: 5px 20px; font-size: 1.8em; border-radius: 8px; cursor: pointer; user-select: none; transition: 0.2s; }
+        .stepper-btn:hover { background: var(--highlight); color: black; box-shadow: 0 0 10px var(--highlight); }
+        .stepper-btn:active { transform: scale(0.95); }
+        .stepper-val { font-size: 2.2em; font-weight: bold; width: 60px; text-align: center; color: var(--highlight); }
+
+        #main-ui { display: none; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; }
+        header { text-align: center; padding: 10px; background: #000; border-bottom: 2px solid var(--highlight); flex-shrink: 0; }
+        #game-container { display: flex; flex: 1; overflow: hidden; }
+        
+        .player-board { flex: 1; padding: 15px; display: flex; flex-direction: column; align-items: center; border-right: 1px solid #333; overflow-y: auto; }
+        #center-console { flex: 1.5; display: flex; flex-direction: column; background: var(--panel-bg); overflow: hidden; }
+        
+        .card { background: #2a2a2a; border: 2px solid #555; border-radius: 10px; padding: 12px; width: 240px; box-shadow: 0 4px 8px rgba(0,0,0,0.5); transition: 0.3s; position: relative; margin-top: 15px; }
+        .card.online { border-color: var(--highlight); box-shadow: 0 0 15px var(--highlight); }
+        .card.offline { border-color: var(--danger); box-shadow: 0 0 10px rgba(255, 77, 77, 0.4); opacity: 0.85; }
+        .card.standby { border-color: #555; }
+        
+        /* 🔥 BPOW VISUAL EFFECTS 🔥 */
+        .bpow-display {
+            font-size: 0.85em; color: #888;
+            border: 1px solid #555; padding: 3px 8px; border-radius: 4px;
+            background: #222; transition: 0.3s;
+        }
+        .bpow-online {
+            color: #00ff66; border-color: #00ff66; font-weight: bold;
+            box-shadow: 0 0 8px rgba(0, 255, 102, 0.4); text-shadow: 0 0 5px rgba(0, 255, 102, 0.5);
+        }
+        .bpow-damage {
+            color: #ff3333 !important; border-color: #ff3333 !important; font-weight: bold;
+            text-shadow: 0 0 8px red !important; box-shadow: 0 0 10px rgba(255, 51, 51, 0.6) !important;
+        }
+
+        @keyframes blinkSlow { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes blinkFast { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .dmg-blink-slow { animation: blinkSlow 1.5s infinite; }
+        .dmg-blink-fast { animation: blinkFast 0.3s infinite; }
+        @keyframes rainbowGlow {
+            0% { border-color: #ff0000; color: #ff0000; text-shadow: 0 0 5px #ff0000; box-shadow: 0 0 8px #ff0000; }
+            33% { border-color: #00ff00; color: #00ff00; text-shadow: 0 0 5px #00ff00; box-shadow: 0 0 8px #00ff00; }
+            66% { border-color: #0000ff; color: #0000ff; text-shadow: 0 0 5px #0000ff; box-shadow: 0 0 8px #0000ff; }
+            100% { border-color: #ff0000; color: #ff0000; text-shadow: 0 0 5px #ff0000; box-shadow: 0 0 8px #ff0000; }
+        }
+        .bpow-rainbow { animation: rainbowGlow 1s linear infinite; font-weight: bold; }
+
+        .attack-lvl1 { border-color: #ff3333 !important; box-shadow: 0 0 15px #ff3333, inset 0 0 10px #ff3333 !important; }
+        .attack-lvl2 { border-color: #ff0000 !important; box-shadow: 0 0 25px #ff0000, 0 0 10px #ff6600, inset 0 0 15px #ff0000 !important; }
+        @keyframes pulseAttack { 0% { box-shadow: 0 0 20px #ff0000, inset 0 0 20px #ff0000; } 50% { box-shadow: 0 0 40px #ff0000, 0 0 20px #ffaa00, inset 0 0 30px #ffaa00; } 100% { box-shadow: 0 0 20px #ff0000, inset 0 0 20px #ff0000; } }
+        .attack-lvl3 { border-color: #ffaa00 !important; animation: pulseAttack 0.5s infinite !important; }
+
+        .stats { 
+            margin-top: 8px; font-size: 0.85em; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; 
+            grid-template-areas: "spow hp" "spd att" "status def"; 
+        }
+        .stat-item { background: #111; padding: 4px; border-radius: 4px; text-align: center; }
+        .stat-spow { grid-area: spow; transition: 0.3s; }
+        .stat-hp { grid-area: hp; }
+        .stat-att { grid-area: att; }
+        .stat-def { grid-area: def; }
+        .stat-spd { grid-area: spd; }
+        
+        .stat-status { 
+            grid-area: status; background: #111; padding: 4px; border-radius: 4px; 
+            display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; min-height: 22px; 
+        }
+        
+        .skill-box { margin-top: 10px; font-size: 0.75em; text-align: left; background: #151515; padding: 8px; border-radius: 6px; line-height: 1.4; color: #ccc; transition: 0.3s; }
+        .skill-box b { color: white; }
+        .skill-activated { color: var(--highlight) !important; font-weight: bold; }
+        .badge-activated { background: #004d40; color: #00ffcc; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-left: 5px; box-shadow: 0 0 5px var(--highlight); }
+
+        .role-badge { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; white-space: nowrap; border: 2px solid; z-index: 10; }
+        .role-attacker { background: #550000; color: #ff6666; border-color: #ff3366; box-shadow: 0 0 10px #ff3366; }
+        .role-defender { background: #002255; color: #66b3ff; border-color: #3399ff; box-shadow: 0 0 10px #3399ff; }
+
+        /* Fix for #log-wrapper to prevent layout breaking */
+        #log-wrapper { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; border-bottom: 1px solid #333; transition: all 0.3s ease; position: relative; }
+        #log-wrapper.collapsed { flex: 0 0 30px !important; min-height: 30px !important; }
+        #log-header { background: #151515; padding: 6px 15px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; color: var(--highlight); flex-shrink: 0; border-bottom: 1px solid #333; }
+        #log-header:hover { background: #222; }
+        #log-wrapper.collapsed #log-box { display: none; }
+        #log-box { flex: 1; overflow-y: auto; padding: 15px; font-family: monospace; font-size: 13px; scrollbar-width: thin; }
+        
+        /* Status Ailment Legend CSS - Redesigned as Popup */
+        #status-legend-box { 
+            display: none; position: absolute; top: 35px; right: 10px; width: 85%; max-width: 320px; 
+            background: rgba(20,20,20,0.98); border: 1px solid var(--highlight); border-radius: 6px; 
+            padding: 10px 15px; font-size: 11px; color: #ccc; max-height: 50vh; overflow-y: auto; 
+            z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.9); line-height: 1.5; 
+        }
+        .status-legend-item { margin-bottom: 6px; border-bottom: 1px solid #333; padding-bottom: 4px; }
+        .status-legend-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        #status-toggle-btn:hover { background: #333 !important; border-color: var(--highlight) !important; color: white !important; }
+
+        .log-entry { margin-bottom: 6px; border-left: 3px solid #555; padding-left: 10px; }
+        .log-p1 { border-color: var(--p1-color); }
+        .log-p2 { border-color: var(--p2-color); }
+        .log-system { border-color: var(--highlight); color: var(--highlight); }
+        .log-bot { border-color: #ff3366; color: #ff99cc; }
+
+        #action-panel { padding: 15px; min-height: 160px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; overflow-y: auto;}
+        .btn { background: #333; color: white; border: 1px solid #555; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .btn:hover:not(:disabled) { background: #444; border-color: var(--highlight); }
+        .btn.primary { background: #005f4b; border-color: var(--highlight); font-weight: bold; }
+        .btn:disabled { background: #222; color: #555; cursor: not-allowed; border-color: #333; }
+
+        .dice-container { display: flex; gap: 8px; margin: 10px 0; justify-content: center; min-height: 45px; flex-wrap: wrap; }
+        .die { width: 35px; height: 35px; background: white; color: black; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; border-radius: 5px; cursor: pointer; user-select: none; transition: 0.2s; }
+        .die.selected { background: var(--highlight); transform: translateY(-5px); box-shadow: 0 5px 10px rgba(0,255,204,0.3); }
+        .die.used { opacity: 0.15; pointer-events: none; background: #555; }
+
+        .status-badge { display: inline-block; padding: 2px 5px; border-radius: 3px; font-size: 11px; font-weight: bold; margin-right: 5px; }
+        .badge-online { background: #00cc66; color: white; }
+        .badge-offline { background: var(--danger); color: white; }
+        .badge-standby { background: #555; color: white; }
+        .badge-asleep { background: #9933cc; color: white; }
+        .badge-dead { background: #ff0000; color: white; box-shadow: 0 0 8px #ff0000; }
+
+        .card-img-container { position: relative; width: 100%; margin-top: 8px; border-radius: 6px; overflow: hidden; }
+        
+        .card-img {
+            width: 100%; height: 160px; 
+            object-fit: cover; 
+            object-position: center; 
+            border-radius: 6px; border: 1px solid #444; box-shadow: 0 2px 4px rgba(0,0,0,0.5); background-color: #111; transition: 0.2s;
+        }
+
+        .gallery-card-img {
+            height: 350px; width: auto; 
+            border: 2px solid #555; border-radius: 10px; cursor: pointer; 
+            object-fit: contain; background-color: #111; transition: 0.3s;
+        }
+        .gallery-card-img:hover { border-color: var(--highlight); transform: scale(1.05); }
+
+        @keyframes fxHit {
+            0% { transform: translate(0, 0) scale(1); filter: brightness(1); box-shadow: 0 0 0 transparent; }
+            10% { transform: translate(-20px, 15px) scale(0.9); filter: brightness(2.5) sepia(1) hue-rotate(-50deg) saturate(10); box-shadow: 0 0 40px red, inset 0 0 30px red; }
+            20% { transform: translate(20px, -15px) scale(0.95); filter: brightness(2) sepia(1); box-shadow: 0 0 40px red, inset 0 0 30px red; }
+            100% { transform: translate(0, 0) scale(1); filter: brightness(1); box-shadow: none; }
+        }
+        .fx-hit { animation: fxHit 0.6s cubic-bezier(.36,.07,.19,.97) both; border: 3px solid #ff0000 !important; }
+        @keyframes fxExplode {
+            0% { filter: brightness(1); transform: scale(1); }
+            50% { filter: brightness(3) contrast(2) drop-shadow(0 0 20px red); transform: scale(1.2); opacity: 1; }
+            100% { filter: brightness(0) blur(5px); transform: scale(0.5); opacity: 0; }
+        }
+        .fx-explode { animation: fxExplode 1s forwards; }
+        @keyframes fxMiss {
+            0% { transform: translateX(0) skewX(0); filter: blur(0); opacity: 1; }
+            15% { transform: translateX(-60px) skewX(-35deg) scaleY(0.8); filter: blur(8px); opacity: 0.4; }
+            100% { transform: translateX(0) skewX(0) scaleY(1); filter: blur(0); opacity: 1; }
+        }
+        .fx-miss { animation: fxMiss 0.7s cubic-bezier(0.25, 1, 0.5, 1); border: 2px solid #00ffcc !important; box-shadow: 0 0 20px #00ffcc !important; }
+
+        @keyframes popText {
+            0% { transform: translate(-50%, -50%) scale(0.1); opacity: 0; }
+            30% { transform: translate(-50%, -50%) scale(2); opacity: 1; text-shadow: 0 0 30px currentColor, 0 0 10px #000; }
+            100% { transform: translate(-50%, -90%) scale(1); opacity: 0; }
+        }
+        .fx-show-text { animation: popText 1.5s ease-out forwards !important; }
+        .fx-text {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 4em; font-weight: 900;
+            text-shadow: 3px 3px 0 #000, -3px -3px 0 #000, 0 0 20px currentColor;
+            pointer-events: none; opacity: 0; z-index: 20; font-family: Impact, sans-serif; text-align: center;
+        }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: #1e1e1e; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px;
+            max-height: 85vh; overflow-y: auto; border: 2px solid var(--highlight);
+            color: #ddd; font-size: 14px; line-height: 1.6; text-align: left;
+        }
+        .th-input-group { margin-bottom: 15px; }
+        .th-input-group label { display: block; color: var(--highlight); margin-bottom: 5px; font-weight: bold; }
+        .th-input-group input, .th-input-group select {
+            width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #555; background: #111; color: white; font-size: 1em; box-sizing: border-box; outline: none;
+        }
+        .th-input-group input:focus, .th-input-group select:focus { border-color: var(--highlight); }
+
+        /* ==========================================
+           🌸 ZEN MODE CSS
+           ========================================== */
+        @keyframes zoomInZen {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .zen-zoom-in { animation: zoomInZen 1s ease-out forwards; }
+        .zen-btn { 
+            background: white; color: #ff66b2; border: 2px solid #ff66b2; 
+            padding: 12px 24px; font-size: 1em; border-radius: 8px; cursor: pointer; 
+            font-weight: bold; transition: 0.3s; margin: 5px;
+        }
+        .zen-btn:hover { background: #ff66b2; color: white; border-color: white; }
+
+        /* ==========================================
+           📝 PMATCG PAPER CSS (For Card 000)
+           ========================================== */
+        #pmatcg-paper-screen .scroll-box {
+            background-color: #ffffff; width: 100%; max-width: 850px; height: 90vh;
+            overflow-y: auto; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            padding: 40px; box-sizing: border-box; color: #2c3e50; line-height: 1.7;
+            font-family: 'Sarabun', 'Helvetica Neue', Arial, sans-serif;
+            margin: auto;
+        }
+        #pmatcg-paper-screen .page-divider {
+            text-align: center; margin: 40px 0 20px 0; color: #95a5a6; font-size: 0.9em;
+            font-weight: bold; border-bottom: 2px dashed #e2e8f0; line-height: 0.1em;
+        }
+        #pmatcg-paper-screen .page-divider span { background: #fff; padding: 0 15px; }
+        #pmatcg-paper-screen h1 { font-size: 24px; color: #1a2a3a; margin-top: 0; text-align: center; }
+        #pmatcg-paper-screen h2 { font-size: 20px; color: #2c3e50; text-align: center; }
+        #pmatcg-paper-screen h3 { font-size: 18px; color: #2b6cb0; border-left: 4px solid #2b6cb0; padding-left: 10px; margin-top: 25px; }
+        #pmatcg-paper-screen h4 { font-size: 16px; color: #4a5568; margin-bottom: 8px; }
+        #pmatcg-paper-screen p { margin: 10px 0; text-align: justify; }
+        #pmatcg-paper-screen ul, #pmatcg-paper-screen ol { margin: 10px 0; padding-left: 25px; }
+        #pmatcg-paper-screen li { margin-bottom: 8px; }
+        #pmatcg-paper-screen .code-text { font-family: 'Courier New', Courier, monospace; background-color: #f7fafc; padding: 2px 6px; border-radius: 4px; font-size: 0.95em; word-break: break-all; }
+        #pmatcg-paper-screen .card-box { background-color: #f8fafc; border: 1px solid #edf2f7; border-radius: 6px; padding: 15px; margin: 15px 0; }
+        
+        #pmatcg-paper-screen .whale { color: #3182ce; font-weight: bold; }
+        #pmatcg-paper-screen .miner { color: #2f855a; font-weight: bold; }
+        #pmatcg-paper-screen .node { color: #dd6b20; font-weight: bold; }
+        #pmatcg-paper-screen .investor { color: #d69e2e; font-weight: bold; }
+        #pmatcg-paper-screen .cypherpunk { color: #6b46c1; font-weight: bold; }
+        #pmatcg-paper-screen .hodl { color: #e53e3e; font-weight: bold; }
+        
+        #pmatcg-paper-screen .liquid { color: #3182ce; font-weight: bold; }
+        #pmatcg-paper-screen .fire { color: #e53e3e; font-weight: bold; }
+        #pmatcg-paper-screen .terra { color: #2f855a; font-weight: bold; }
+        #pmatcg-paper-screen .awareness { color: #d69e2e; font-weight: bold; }
+        #pmatcg-paper-screen .ego { color: #dd6b20; font-weight: bold; }
+        #pmatcg-paper-screen .suffering { color: #6b46c1; font-weight: bold; }
+        
+        #pmatcg-paper-screen .highlight { background-color: #fffaf0; border-left: 4px solid #dd6b20; padding: 10px 15px; margin: 15px 0; }
+
+
+        @media screen and (max-width: 768px) {
+            body { overflow: hidden; height: 100vh; }
+            #main-ui { height: 100vh; display: flex; flex-direction: column; }
+            header { flex-shrink: 0; padding: 8px; font-size: 0.9em; }
+            
+            #game-container {
+                display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto 1fr auto;
+                grid-template-areas: "log log" "p1 p2" "action action"; flex: 1; overflow: hidden; position: relative;
+            }
+            #center-console { display: contents; }
+            #log-wrapper { grid-area: log; height: 14vh; min-height: 70px; max-height: 120px; border-bottom: 2px solid #444; background: #0a0a0a; border-right: none; display: flex; flex-direction: column; transition: all 0.3s ease; }
+            #log-wrapper.collapsed { height: 30px !important; min-height: 30px !important; max-height: 30px !important; }
+            #log-box { flex: 1; overflow-y: auto; font-size: 11px; padding: 5px 10px; }
+            #p1-board { grid-area: p1; border-right: 1px solid #333; padding: 5px; overflow-y: auto; }
+            #p2-board { grid-area: p2; padding: 5px; overflow-y: auto; }
+            #action-panel { grid-area: action; min-height: 120px; padding: 10px; border-top: 2px solid var(--highlight); }
+            
+            .card { width: 95%; max-width: 170px; margin: 10px auto; padding: 8px; border-radius: 8px; }
+            .stats { font-size: 0.70em; gap: 2px; }
+            .card-img { height: 120px; }
+            .btn { padding: 8px; font-size: 11px; }
+            .die { width: 28px; height: 28px; font-size: 14px; margin: 2px; }
+            .gallery-card-img { height: 250px; }
+            
+            /* Mobile tweaks for Zen Mode */
+            #zen-story-frame, #zen-choice-frame { font-size: 1.1em !important; padding: 15px !important; }
+            
+            /* Mobile tweaks for Splash Screen */
+            #splash-main-text { font-size: 2.2rem !important; }
+            #splash-sub-text { font-size: 1.3rem !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="quote-splash-screen" class="fullscreen-screen" style="display:flex; background-color: #000; z-index: 200000; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; transition: opacity 0.3s;">
+        <div style="display: flex; flex-direction: column; align-items: stretch; max-width: 90%; width: 100%;">
+            <div id="splash-main-text" style="color: #ff1493; font-size: 3.5rem; font-weight: bold; text-align: center; margin-bottom: 10px; word-break: keep-all;">What Is Money?</div>
+            <div id="splash-sub-text" style="color: #ffd700; font-size: 1.8rem; text-align: right; width: 100%;">—Piranya33</div>
+        </div>
+    </div>
+
+    <div id="zen-mode-container" class="fullscreen-screen" style="display:none; background-color: #ffb6c1; z-index: 100000; flex-direction: column; padding: 20px; box-sizing: border-box;">
+        <div style="position: absolute; top: 15px; right: 20px;">
+            <button id="zen-lang-btn" class="btn" style="border-radius: 20px; padding: 5px 15px; font-weight: bold; background: white; color: #ff66b2; border: 2px solid #ff66b2;">🇺🇸 EN</button>
+        </div>
+        <div id="zen-story-frame" style="flex: 1; border: 4px solid white; background-color: rgba(255,105,180, 0.2); border-radius: 10px; margin: 10px; padding: 20px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 1.5em; overflow-y: auto; box-shadow: 0 0 20px rgba(255,255,255,0.5);">
+            <div id="zen-story-text" style="color: white; font-weight: bold; line-height: 1.5;"></div>
+        </div>
+        <div id="zen-choice-frame" style="flex: 1; border: 4px solid white; background-color: rgba(255,105,180, 0.2); border-radius: 10px; margin: 10px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 1.5em; overflow-y: auto; box-shadow: 0 0 20px rgba(255,255,255,0.5);">
+            <div id="zen-choice-text" style="color: black; min-height: 2em; font-weight: bold; line-height: 1.5;"></div>
+            <div id="zen-buttons" style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;"></div>
+        </div>
+    </div>
+
+    <div id="cover-screen" class="fullscreen-screen">
+        <div class="cover-content">
+            <div style="position: absolute; top: 15px; right: 20px;">
+                <button id="lang-btn" class="btn" style="border-radius: 20px; padding: 5px 15px; font-weight: bold;">🇺🇸 EN</button>
+            </div>
+            
+            <h1 id="menu-title-text" style="color: var(--highlight); margin-top: 20px;">คุณชื่ออะไร ?</h1>
+            <input type="text" id="player-name-input" placeholder="จิตเดิมแท้" autocomplete="off" />
+            <br>
+            <button id="play-btn" class="btn primary cover-btn">PVE</button>
+            <button id="th-btn" class="btn cover-btn" style="background:#4a148c; border-color:#d500f9; color: white;">Timechain HERO</button>
+            <button id="pmatcg-btn" class="btn cover-btn" style="background:#ff9800; border-color:#e65100; color: white;">PMATCG</button>
+            <br><br>
+            <button id="rules-btn" class="btn" style="font-size: 1em;">📖 กติกา / Rules</button>
+        </div>
+    </div>
+
+    <!-- PMATCG PAPER SCREEN -->
+    <div id="pmatcg-paper-screen" class="fullscreen-screen" style="display:none; background:rgba(0,0,0,0.85); flex-direction:column; z-index: 10000; backdrop-filter: blur(5px);">
+        <div style="position: absolute; top: 20px; left: 20px; z-index: 10001;">
+            <button class="btn" onclick="document.getElementById('pmatcg-paper-screen').style.display='none'; document.getElementById('pmatcg-gallery-modal').style.display='flex';" style="background: #333; color: white; border-color: #555; padding: 10px 20px; font-size: 14px;">🔙 Back</button>
+        </div>
+        
+        <!-- THAI PAPER -->
+        <div id="paper-th" class="scroll-box" style="display:block; margin-top:20px;">
+            <div class="page-divider"><span>--- PAGE 1 ---</span></div>
+            <h1>951971: The 1st Hard Fork</h1>
+            <h2>PMA Trading Card Game: A Hand-to-Hand Card Game Cash</h2>
+            <p style="text-align: center;"><strong>PMATCG(Pigrock)</strong></p>
+            <p style="text-align: center;"><span class="code-text">Nostr: npub1u69smj42umzck7f20zae0x8lxwn2f802pccdxsvjnwrma4ajqzcscfgtps</span></p>
+            
+            <h3>บทคัดย่อ (Abstract)</h3>
+            <p><strong>PMA TCG = Trading Card Game + Art + Cash</strong></p>
+            
+            <h3>1. บทนํา (Introduction)</h3>
+            <p>PMA TCG (PMA Trading Card Game) คือการผสมผสานระหว่าง การ์ดเกม ศิลปะทำมือ และระบบเงินสดทางกายภาพ (Physical Cash) โดยใช้กลไกความขาดแคลนแบบ Bitcoin เพื่อส่งมอบคุณค่าระหว่างผู้สร้างและผู้เล่นโดยตรง (Value for Value) ปราศจากตัวกลาง ผู้เล่นสามารถตรวจสอบความแท้จริงของการ์ดได้เองผ่านระบบข้อมูลสาธารณะ (Nostr)</p>
+            
+            <h3>2. การแลกเปลี่ยนและการ์ดชุดแรก (First Trade & Genesis Cards)</h3>
+            <p><strong>กลไกการผลิต (Halving):</strong> อัตราการผลิตเริ่มต้นที่ 1 ใบต่อ 1,008 บล็อก เมื่อเกิดปรากฏการณ์ Halving ระยะเวลาการผลิตจะเพิ่มขึ้น 2 เท่าเสมอ (เป็น 2,016, 4,032 และ 8,064 บล็อกต่อใบตามลำดับ) โดย PMATCG Halving ครั้งที่ 1 เริ่มที่บล็อค 105,000</p>
+            <p><strong>การแลกเปลี่ยนครั้งแรก (Hand-to-Hand Exchange):</strong> เพื่อรักษาคุณค่า V4V การ์ดทุกใบในการซื้อขายครั้งแรกจะต้องส่งมอบจากมือผู้สร้างสู่มือผู้สนับสนุนโดยตรงในพื้นที่จัดงาน Meeting ต่างๆของชุมชน #SIAMSTR</p>
+            <p><strong>การ์ดชุดแรก (The Genesis Cards):</strong> จะเปิดตัวและกระจายเข้าสู่เครือข่ายเป็นครั้งแรกในวันที่ 22 พฤษภาคม 2026 ณ งาน Bitcoin Pizza Day 2026 (Chit Terminal)</p>
+            
+            <h3>3. การประทับเวลา (Timestamp Server)</h3>
+            <p>การ์ดทุกใบจะถูกประทับ "เลขบล็อก" (Block Height) เพื่อทำหน้าที่เป็น Timestamp ประจำการ์ด ซึ่งมีบทบาทสำคัญ 2 ประการ คือ:</p>
+            <ol>
+                <li><strong>#Siamstr Diary:</strong> ยืนยันลำดับเวลาและเหตุการณ์ที่เกิดขึ้นในชุมชน #Siamstr</li>
+                <li><strong>กลไกการเล่น:</strong> ใช้เลขบล็อกเป็นตัวกำหนดค่า status class และธาตุของการ์ดต่างๆที่ถูกผลิตขึ้นในบล็อกนั้นๆ โดยอ้างอิงข้อมูลมาจากระบบ Bitcoin และใช้ค่าเหล่านั้นในการขับเคลื่อนระบบเกม</li>
+            </ol>
+
+            <div class="page-divider"><span>--- PAGE 2 ---</span></div>
+            
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <h3>4. ความยากลำบากในการผลิต (Physical Proof-of-Work: PPoW)</h3>
+            <p>การ์ดทุกใบถูกสร้างขึ้นด้วยมือ (Handmade) และมีเนื้อหาอ้างอิงตามเหตุการณ์จริงในช่วงเวลานั้น ข้อจำกัดด้านแรงงานและเวลา (PPoW) นี้ ช่วยป้องกันการปั๊มการ์ดจำนวนมาก (Anti-spam) และทำให้การ์ดแต่ละใบมีเอกลักษณ์ที่ไม่สามารถผลิตซ้ำได้</p>
+            
+            <h3>5. เครือข่ายการกระจายข้อมูล (Network Distribution)</h3>
+            <p>ข้อมูลของการ์ดทุกใบจะถูกบันทึกและเผยแพร่ลงบนโปรโตคอล Nostr โดยตรงเพื่อทำหน้าที่เป็น Public Ledger ที่มีความกระจายศูนย์ (Decentralization) ปลอดภัยจากการถูกลบหรือแก้ไข โดยมีเกม PMATCGV ในการดึงข้อมูลและเผยแพร่ไฟล์การ์ด นอกจากนี้ ระบบยังเปิดให้ดาวน์โหลดไฟล์ในรูปแบบ Print-and-Play เพื่อให้ผู้เล่นนำไปพิมพ์เล่นเองได้ฟรี กลไกนี้สร้างประโยชน์ร่วมกันแบบ Win-Win โดยผู้เล่นสามารถเข้าถึงความสนุกได้ทันที ส่วนผู้สร้างก็ได้กระจายผลงานสู่สังคม</p>
+            
+            <h3>6. แรงจูงใจ (Incentive)</h3>
+            <p><strong>การซื้อขายครั้งแรก (First Trade):</strong> ของการ์ดทุกใบจากผู้สร้าง จะถูกตรึงราคาขายไว้ที่ 21,000 Sats เสมอ เพื่อสร้างมาตรฐานราคาและรักษามูลค่าทางเศรษฐกิจของเครือข่าย</p>
+            <p><strong>การแข่งขันประจำปี:</strong> จะมีการจัดแข่ง PMATCG Hand-to-Hand Championship (H2H Championship) ในงาน Bitcoin Pizza Day ของทุกปี (เริ่มครั้งที่ 1 ปี 2027) โดยอนุญาตให้ใช้เฉพาะการ์ดแท้ในการเข้าร่วมเท่านั้น</p>
+            
+            <h3>7. การตรวจสอบ (Verification)</h3>
+            <p>ผู้เล่นทุกคนสามารถตรวจสอบความแท้จริงของการ์ดในมือได้ทันที โดยการเปรียบเทียบลักษณะทางกายภาพของการ์ดกับฐานข้อมูลภาพความละเอียดสูงบน Public Ledger ส่วนกลาง</p>
+
+            <div class="page-divider"><span>--- PAGE 3 ---</span></div>
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <h3>ข้อมูลการ์ดชุดแรก (The Genesis Card)</h3>
+            
+            <div class="card-box">
+                <h4>#00A. WIM?, Splatter (<span class="whale">Class: Whale</span>) 939999 [<span class="liquid">Liquid</span>]</h4>
+                <p class="code-text">000000000000000000007e95c9885d9eb2d67a3b7027d678376bb487323004ca</p>
+                <p><strong>Stats:</strong> HP 9 | ATT 9 | DEF 9 | SPD 3 | BPoW: 16</p>
+                <p><strong>Passive Skill:</strong> Dice roll phase; Pay X HP, +X POW</p>
+                <p><strong>SPoW:</strong> Pay 2 PoW: If target Node dodges, it rolls 2 dice and takes the lower result.</p>
+            </div>
+
+            <div class="card-box">
+                <h4>#00B. CHIT, CraftBeernardo (<span class="miner">Class: Miner</span>) 944828 [<span class="ego">Ego</span>]</h4>
+                <p class="code-text">0000000000000000000037beb759c4c60295efd78583c1ca02addd7587934ae1</p>
+                <p><strong>Stats:</strong> HP 8 | ATT 2 | DEF 8 | SPD 1 | BPoW: 9</p>
+                <p><strong>SPoW:</strong> Pay 1 PoW, Pay 2 HP: +4 ATT</p>
+            </div>
+
+            <div class="card-box">
+                <h4>#00C.* PIRANYA, Donutello (<span class="node">Class: BTC Node</span>) 945664 [<span class="terra">Terra</span>]</h4>
+                <p class="code-text">00000000000000000000289d2f75320161f2d9e3f684821112a7d6abae7afb9c</p>
+                <p><strong>#00D. Stats:</strong> HP 4 | ATT 6 | DEF 6 | SPD 2 | BPoW: 9</p>
+                <p><strong>SPoW:</strong> Pay 3 PoW(Attack phase only): Target Node becomes Asleep.</p>
+            </div>
+
+            <div class="card-box">
+                <h4>MM, MAY O'Neil (<span class="investor">Class: Investor</span>) 947173 [<span class="fire">Fire</span>]</h4>
+                <p class="code-text">00000000000000000000581b3738e2443ed2deaa69c55d0e3825499b65380073</p>
+                <p><strong>Stats:</strong> HP 3 | ATT 7 | DEF 1 | SPD 3 | BPoW: 8</p>
+                <p><strong>SPoW:</strong> Pay 2 PoW: +1 SPD and heals 1 HP(up to max).</p>
+            </div>
+
+            <div class="card-box">
+                <h4>#00E. SMART COIN, Savephael (<span class="cypherpunk">Class: Cypherpunk</span>) 949068 [<span class="awareness">Awareness</span>]</h4>
+                <p class="code-text">00000000000000000000cd82663a4f607bb1e8a69d0ace429e8717a6f8172a9d</p>
+                <p><strong>Stats:</strong> HP 8 | ATT 6 | DEF 0 | SPD 2 | BPoW: 8</p>
+                <p><strong>SPoW:</strong> Pay 2 PoW(Attack phase only): Target Node, SPD becomes 0</p>
+            </div>
+
+            <div class="card-box">
+                <h4>#00F. PMA, Machelangelo (<span class="hodl">Class: HODL</span>) 949337 [<span class="fire">Fire</span>]</h4>
+                <p class="code-text">0000000000000001223535da6ec0c52a5d9552c48f63e2268155d91265eb</p>
+                <p><strong>Stats:</strong> HP 7 | ATT 3 | DEF 3 | SPD 2 | BPoW: 8</p>
+                <p><strong>SPoW:</strong> Pay 2 PoW: +2 SPD</p>
+            </div>
+
+            <div class="page-divider"><span>--- PAGE 4 ---</span></div>
+            <h3>8. โปรโตคอลการเล่นเกม (Gameplay Protocol)</h3>
+            <h4>8.1 รูปแบบการเล่น 1V1 (1PMA = 1PMA)</h4>
+            <p><strong>เป้าหมายการเล่น:</strong> ลด HP ของ Node ฝ่ายตรงข้ามให้เหลือ 0</p>
+            <p><strong>อุปกรณ์:</strong> การ์ด Node ฝั่งละ 1 ใบ, ลูกเต๋า 6 หน้า (D6) ฝั่งละ 3 ลูก</p>
+            
+            <p><strong>//SET UP</strong></p>
+            <p><strong>Sync Phase (เริ่มเกม):</strong> นำค่า SPD ของ Node ทั้งสองฝ่ายมาเปรียบเทียบกัน ฝ่ายที่ SPD สูงกว่าจะได้เป็น ฝ่ายรุก (Attacker) ก่อน (หากเท่ากัน ให้ทอยเต๋าเพื่อตัดสิน)</p>
+            
+            <p><strong>//START GAME &gt;&gt;&gt; TURNการเล่นจะแบ่งเป็น 4 ช่วง (Phases) ดังนี้:</strong></p>
+            <h4>1. Attack Phase (ฝ่ายรุก):</h4>
+            <ul>
+                <li><strong>Dice Roll (ทอยเต๋า):</strong> ฝ่ายรุกทอยลูกเต๋า 3 ลูก (กฎตอง: หากออกหน้าเดียวกัน 3 ลูก +3Spd (1Turn)) ผู้เล่นสามารถจ่าย 2 HP เพื่อได้รับ 2 PoW เพิ่มได้ (1ครั้ง/turn) (Overclock)</li>
+                <li><strong>Activate (เปิดสถานะ Node):</strong> เลือกสละลูกเต๋ากี่ลูกก็ได้ เพื่อนำผลรวมหน้าเต๋ามาสร้างเป็นแต้ม PoW นำแต้ม PoW ไปจ่ายค่า BPoW เพื่อเปลี่ยน Node ให้อยู่ในสถานะ Online (พร้อมสั่งการ)<br>
+                <span style="font-size: 0.9em; color: #7f8c8d;">หมายเหตุ: หากแต้ม PoW ไม่พอจ่าย Node จะติดสถานะ Offline: ผู้เล่นไม่สามารถ Boost & Command Node นี้ได้ และ DEF ลดครึ่งหนึ่ง (ปัดขึ้น)</span></li>
+                <li><strong>Boost (เลือกทำหรือไม่ก็ได้):</strong>
+                    <ul>
+                        <li><strong>Active Skill (SPoW):</strong> นำแต้ม PoW ที่เหลือจากการจ่าย BPoW ไปจ่ายค่า SPoW เพื่อเปิดใช้สกิล (จำกัด 1 ครั้ง/สกิล)</li>
+                        <li><strong>Dash:</strong> สละลูกเต๋า(ที่ยังไม่ถูกใช้สร้างPoW) 1ลูก เพื่อให้ Node ติดสถานะ Dash (พลังโจมตีรวม = ATT+SPD)</li>
+                        <li><strong>Command:</strong> ออกคำสั่งให้ Node โจมตีเป้าหมาย หรือ Offline</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <div class="page-divider"><span>--- PAGE 5 ---</span></div>
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <h4>2. Defense Phase (ฝ่ายรับ):</h4>
+            <ul>
+                <li><strong>Dice Roll (ทอยเต๋า):</strong> ฝ่ายรับทอยลูกเต๋า 3 ลูก (กฎตอง: หากออกหน้าเดียวกัน 3 ลูก +3Spd(1Turn)) ผู้เล่นสามารถจ่าย 2 HP เพื่อได้รับ 2 PoW เพิ่มได้(1ครั้ง/turn) (Overclock)</li>
+                <li><strong>Activate (เปิดสถานะ Node):</strong> เลือกสละลูกเต๋ากี่ลูกก็ได้ เพื่อนำผลรวมหน้าเต๋ามาสร้างเป็นแต้ม Pow นำแต้ม PoW ไปจ่ายค่า BPoW เพื่อเปลี่ยน Node ให้อยู่ในสถานะ Online (พร้อมสั่งการ)<br>
+                <span style="font-size: 0.9em; color: #7f8c8d;">หมายเหตุ: หากแต้ม PoW ไม่พอจ่าย Node จะติดสถานะ Offline: ผู้เล่นไม่สามารถ Boost & Command Node นี้ได้ และ DEF ลดครึ่งหนึ่ง (ปัดขึ้น)</span></li>
+                <li><strong>Boost (เลือกทำหรือไม่ก็ได้):</strong>
+                    <ul>
+                        <li><strong>Active Skill (SPOW):</strong> นำแต้ม PoW ที่เหลือจากการจ่าย BPoW ไปจ่ายค่า SPOW เพื่อเปิดใช้สกิล (จำกัด 1 ครั้ง/สกิล)</li>
+                        <li><strong>Dodge:</strong> สละลูกเต๋า(ที่ยังไม่ถูกใช้สร้างPoW) 1ลูก เพื่อให้ Node สามารถเลือกตั้งรับด้วย Dodge ได้</li>
+                        <li><strong>Command:</strong> ออกคำสั่งให้ Node ตั้งรับ(เลือกได้ 1 อย่าง) หรือ Offline:
+                            <ul>
+                                <li><strong>Defend (ป้องกัน):</strong> ใช้ค่า DEF รับการโจมตี</li>
+                                <li><strong>Dodge (หลบหลีก):</strong> ทำได้เมื่อผ่านเงื่อนไข Boost Dodge มา</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h4>3. Settle Phase (สรุปผล):</h4>
+            <p>คำนวณความเสียหายตามที่ฝ่ายรับเลือก (ถ้า att ฝ่ายรุก &le; 0 ให้ถือว่า damage = 0):</p>
+            <ul>
+                <li><strong>หากเลือก Defend (และ Offline):</strong> ความเสียหาย (Damage) = ATT ของฝ่ายรุก - DEF ของฝ่ายรับ (หาก ATT หักลบ DEF แล้ว &le; 0 จะรับดาเมจขั้นต่ำ 1 Damage)</li>
+            </ul>
+
+            <div class="page-divider"><span>--- PAGE 6 ---</span></div>
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <ul>
+                <li><strong>หากเลือก Dodge:</strong> ผู้เล่นทั้งสองฝั่งทอยเต๋าคนละ 1 ลูก นำแต้มที่ได้บวกกับค่า SPD ของตนเอง
+                    <ul>
+                        <li>รุก &gt; รับ (หลบพลาด): รับความเสียหายเต็มจำนวน (Damage = ATT ฝ่ายรุก โดยไม่นำ DEF มาหักลบ)</li>
+                        <li>รุก &lt; รับ (หลบสำเร็จ): ไม่ได้รับความเสียหาย (Damage = 0)</li>
+                        <li>รุก = รับ (เสมอ): ทอยเต๋าตัดสินใหม่</li>
+                    </ul>
+                </li>
+                <li><strong>การหักพลังชีวิต:</strong> นำ Damage ที่คำนวณได้ไปหักออกจาก HP ของฝ่ายรับ</li>
+            </ul>
+            
+            <h4>4. End Phase:</h4>
+            <ul>
+                <li><strong>ล้างสถานะ (Clear):</strong> ยกเลิกการปรับเปลี่ยน Stat ชั่วคราวทั้งหมดในเทิร์นนี้ (คงไว้เฉพาะผลถาวร) สำหรับสถานะผิดปกติ (Status Ailments) ให้คงอยู่หรือถูกล้างออกตามเงื่อนไขเฉพาะของสถานะนั้นๆ</li>
+                <li><strong>สลับบทบาท:</strong> ฝ่ายรับสลับมาเป็นฝ่ายรุก และกลับไปเริ่ม Attack Phase ใหม่อีกครั้ง</li>
+                <li><strong>Shutdown:</strong> หาก HP ของ Node ฝ่ายใดลดเหลือ 0 จะถือว่าถูก Shutdown และเอา Node นั้นออกจากสนามทันที ผู้เล่นใดไม่มี Node ให้เล่นให้ถือว่าเป็นผู้พ่ายแพ้ทันที ส่วนผู้ชนะจะได้รับ 1 Point และเริ่มเล่นเกมกันใหม่อีกรอบ</li>
+                <li><strong>Game Over:</strong> ผู้เล่นที่มี 2 Point ก่อน จะถือว่าเป็นผู้ชนะในเกมนี้ไป</li>
+            </ul>
+            
+            <h4>Condition (สถานะ):</h4>
+            <ol>
+                <li><strong>Online:</strong> The controller can Boost & Command this Node.</li>
+                <li><strong>Offline:</strong> The controller cannot Boost & Command this Node. Its DEF is halved (rounded up).</li>
+            </ol>
+            
+            <h4>Status Ailments:</h4>
+            <ul>
+                <li><strong>Muted:</strong> ไม่สามารถใช้สกิล (SPoW) ได้ (หายไปเมื่อเข้าสู่สถานะ Offline)</li>
+                <li><strong>Overheat:</strong> ไม่สามารถใช้ Overclock ได้ (หายไปเมื่อเข้าสู่สถานะ Offline)</li>
+                <li><strong>51%Att:</strong> เมื่อการ์ดติดสถานะ Offline จะโดนดาเมจ 1 HP ทันที (หายไปเมื่อเข้าสู่สถานะ Online)</li>
+                <li><strong>Bug:</strong> สลับค่า ATT(พื้นฐาน) และ DEF(พื้นฐาน) ของตนเอง (หายไปเมื่อจบเทิร์น)</li>
+                <li><strong>Virus:</strong> สุ่มรับ 1 สถานะผิดปกติ (หรือไม่มีผล)</li>
+                <li><strong>Asleep:</strong> บังคับเป็นสถานะ Offline และยกเลิกการโจมตี การ์ดจะตื่น (หายจากสถานะนี้) เมื่อได้รับดาเมจ หรือ ตื่นเองเมื่อจบเทิร์น</li>
+            </ul>
+            
+            <h4>8.2 กฎชุมชน (House Rules)</h4>
+            <p>เกมนี้ออกแบบมาเป็น Core Protocol แบบเปิดกว้าง (Open-source concept) สนับสนุนให้ผู้เล่นนำไปดัดแปลง สร้างกติกาใหม่ และแบ่งปันร่วมกับชุมชน</p>
+
+            <div class="page-divider"><span>--- PAGE 7 ---</span></div>
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <h3>9. สรุป (Conclusion)</h3>
+            <p>เป้าหมายสูงสุดของ PMA TCG คือการเป็นทั้งเกมการ์ด งานศิลปะ และเงินสดทางกายภาพ (Physical Cash) ในเวลาเดียวกัน อีกทั้งยังเป็นสารตั้งต้นให้ผู้เล่นทั้งเด็กและผู้ใหญ่มีความสงสัยในระบบ Bitcoin และ พุทธะ จนอาจนำไปสู่การเริ่มศึกษาได้ และตั้งใจให้ผู้เล่นสนุกกับการเล่น การสะสม การใช้จ่าย และการเรียนรู้</p>
+            
+            <h3>10. สูตรคำนวณ (Formula)</h3>
+            <p>การ์ด Node ทุกใบถูกกำหนดค่า HP, Att, Def และ Spd มาจากข้อมูล Bitcoin Blockchain</p>
+            <ul>
+                <li>HP มาจากเลขหลักหน่วยของ Block Height(X)</li>
+                <li>Att มาจากเลขหลักสิบของ Block Height(X)</li>
+                <li>Def มาจากเลขหลักร้อยของ Block Height(X)</li>
+                <li>Spd มาจากการหาเลข 1-3 ในค่า Hash ของ Block Height นั้น โดยเริ่มจากตำแหน่งสุดท้ายก่อนแล้วค่อยขยับขึ้นมา ถ้าหาเลขไหนเจอก่อนก็จะใช้เลขนั้น(1-3) เป็นค่า spd (ถ้าหาไม่ได้ spdจะ = 0)</li>
+            </ul>
+            <p>หลังจากนั้นจะเข้าสู่สูตรคำนวณเพื่อหา ค่าร่าย (PoW) สายอาชีพ (Class) และ ธาตุ (Element)</p>
+            
+            <h4>10.1 สูตรคำนวณค่าร่าย (BPoW Calculation Formula)</h4>
+            <p>สูตรออกแบบมาเพื่อรักษาสมดุล (Balance) การ์ดที่สเตตัสสูงจะต้องใช้แต้มลูกเต๋าในการเล่นสูงตาม ในขณะที่การ์ดสเตตัสต่ำจะสามารถสั่งการหรือใช้สกิลได้ง่ายกว่า</p>
+            <p><strong>สูตรคำนวณ BPoW:</strong> <span class="code-text">BPOW = ((HP+ATT+DEF)/2)+SPD-1</span> (ปัดขึ้นตามหลักสากล)</p>
+            
+            <h4>10.2 สูตรคำนวณคลาส (Class Formula)</h4>
+            <p>การ์ดตัวละคร (Node) แต่ละใบจะถูกจัดสายอาชีพตาม "Status" โดยใช้ "สูตรน้ำตก" (คำนวณตามลำดับข้อ 1 ถึง 6 หากเข้าเงื่อนไขข้อใดก่อน จะถือว่าเป็นสายอาชีพนั้นทันที)</p>
+
+            <div class="page-divider"><span>--- PAGE 8 ---</span></div>
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <h4>ลำดับการเช็กเงื่อนไข:</h4>
+            <ol>
+                <li><span class="whale">Whale (วาฬ):</span> PoW &ge; 12 (ใช้จ่ายเยอะสมฐานะ ขยับทีสะเทือนทั้งวงการ)</li>
+                <li><span class="miner">Miner (นักขุด):</span> DEF &ge; 7 และ DEF &gt; ATT (ถึก ทน นาน ค้นหาความจริงเพียงหนึ่งเดียว)</li>
+                <li><span class="node">BTC Node (โหนด):</span> ATT &ge; 4 และ DEF &ge; 4 (เดินสายกลาง ไม่ยึดติดกับสิ่งใด)</li>
+                <li><span class="investor">Investor (นักลงทุน):</span> SPD = 3 (มีความเร็วสูงสุดเพื่อฉกฉวยทุกโอกาส)</li>
+                <li><span class="cypherpunk">Cypherpunk (ไซเฟอร์พังก์):</span> ATT &ge; 5 หรือ ATT &le; 1 (ไร้ตัวตน ไร้รูปแบบตายตัว โค้ดคือสัจธรรม)</li>
+                <li><span class="hodl">HODL (โฮดเลอร์):</span> (ไม่ตรงกับข้อ 1 ถึง 5 เลย) (เก็บยาว เก็บลืม เก็บเผื่อลูกหลาน)</li>
+            </ol>
+            
+            <h4>(Class Advantage)</h4>
+            <p><strong>ชุดที่ 1: วงจรขุมทรัพย์ (Treasure Cycle)</strong></p>
+            <ul>
+                <li><span class="whale">Whale</span> ชนะทาง <span class="hodl">HODL</span></li>
+                <li><span class="hodl">HODL</span> ชนะทาง <span class="miner">Miner</span></li>
+                <li><span class="miner">Miner</span> ชนะทาง <span class="whale">Whale</span></li>
+            </ul>
+            <p><strong>ชุดที่ 2: วงจรแห่งเครือข่าย (Network Cycle)</strong></p>
+            <ul>
+                <li><span class="investor">Investor</span> ชนะทาง <span class="cypherpunk">Cypherpunk</span></li>
+                <li><span class="cypherpunk">Cypherpunk</span> ชนะทาง <span class="node">BTC Node</span></li>
+                <li><span class="node">BTC Node</span> ชนะทาง <span class="investor">Investor</span></li>
+            </ul>
+            <p><small>* Class Advantage ไม่มีผลในรูปแบบเกม 1V1 (ทำให้เพื่อนๆไว้ใช้ในรูปแบบเกมอื่นๆ)</small></p>
+            
+            <h4>10.3 สูตรคำนวณหาธาตุ (Element Formula)</h4>
+            <p>สแกนหาตัวอักษรภาษาอังกฤษจากท้าย Block Hash ย้อนกลับมาหาหน้า เจอตัวไหนก่อนถือเป็นธาตุนั้น:</p>
+            <ul>
+                <li>a = <span class="liquid">Liquid (น้ำ)</span></li>
+                <li>b = <span class="fire">Fire (ไฟ)</span></li>
+                <li>c = <span class="terra">Terra (ดิน)</span></li>
+                <li>d = <span class="awareness">Awareness (สติ)</span></li>
+                <li>e = <span class="ego">Ego (ตัวตน)</span></li>
+                <li>f = <span class="suffering">Suffering (ทุกขเวทนา)</span></li>
+            </ul>
+
+            <div class="page-divider"><span>--- PAGE 9 ---</span></div>
+            <h4>(Element Advantage)</h4>
+            <p><strong>ชุดที่ 1: วงจรธรรมชาติ (Nature Cycle)</strong></p>
+            <ul>
+                <li><span class="liquid">Liquid</span> ชนะทาง <span class="fire">Fire</span></li>
+                <li><span class="fire">Fire</span> ชนะทาง <span class="terra">Terra</span></li>
+                <li><span class="terra">Terra</span> ชนะทาง <span class="liquid">Liquid</span></li>
+            </ul>
+            <p><strong>ชุดที่ 2: วงจรจิตเดิมแท้ (Original Mind Cycle)</strong></p>
+            <ul>
+                <li><span class="awareness">Awareness</span> ชนะทาง <span class="suffering">Suffering</span></li>
+                <li><span class="suffering">Suffering</span> ชนะทาง <span class="ego">Ego</span></li>
+                <li><span class="ego">Ego</span> ชนะทาง <span class="awareness">Awareness</span></li>
+            </ul>
+            <p><small>* Element Advantage ไม่มีผลในรูปแบบเกม 1V1 (ทำให้เพื่อนๆไว้ใช้ในรูปแบบเกมอื่นๆ)</small></p>
+            
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <h3>11. ภาคผนวก (Appendix)</h3>
+            <p>ลิงก์อ้างอิงวิดีโอ:<br>
+            <a href="https://youtu.be/aCrBLwba7-4?si=sPNi6bMtqWAIPQ9q" target="_blank" class="code-text">https://youtu.be/aCrBLwba7-4?si=sPNi6bMtqWAIPQ9q</a><br>
+            <a href="https://youtu.be/paiVRqefCA?si=VuJpKKLSTXL208R9" target="_blank" class="code-text">https://youtu.be/paiVRqefCA?si=VuJpKKLSTXL208R9</a></p>
+            
+            <p>วงจร “จิตเดิมแท้” ในระบบธาตุของ PMATCG ไม่ได้เป็นเพียงกลไกการได้เปรียบเสียเปรียบ (Element Advantage) แต่คือการจำลองสภาวะการตื่นรู้ของจิตมนุษย์ โดยแบ่งองค์ประกอบออกเป็น 3 ธาตุแห่งการเวียนว่าย:</p>
+            <ol>
+                <li><strong><span class="awareness">สติ (Awareness)</span>:</strong> ความตระหนักรู้ ความพยายามที่จะรักษาความสว่างไสว</li>
+                <li><strong><span class="ego">ตัวตน (Ego)</span>:</strong> อัตตา ความยึดมั่นถือมั่นใน "ตัวกู-ของกู"</li>
+                <li><strong><span class="suffering">ทุกขเวทนา (Suffering)</span>:</strong> ความเจ็บปวด บีบคั้น และกิเลสที่เข้ามากระทบ</li>
+            </ol>
+            
+            <h4>กลไกแห่งวัฏสงสาร (The Cycle of Illusion)</h4>
+            <ul>
+                <li><strong><span class="awareness">สติ</span> ดับ(ชนะ) <span class="suffering">ทุกขเวทนา</span>:</strong> ผู้ไม่ยึดติด ย่อมไม่จมลงในห้วงทุกข์</li>
+                <li><strong><span class="suffering">ทุกขเวทนา</span> ขยี้(ชนะ) <span class="ego">ตัวตน</span>:</strong> เมื่อความทุกข์จากความไม่เที่ยง เข้าบดขยี้อัตตาและทลายความยึดมั่นในตัวตน</li>
+                <li><strong><span class="ego">ตัวตน</span> กลืน(ชนะ) <span class="awareness">สติ</span>:</strong> เมื่อหลงมัวเมาในอัตตา ความสว่างไสวแห่งปัญญา ย่อมถูกเมฆหมอกบดบัง</li>
+            </ul>
+
+            <div class="page-divider"><span>--- PAGE 10 ---</span></div>
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <p>เพื่ออธิบายแก่นแท้ของวงจรนี้ PMATCG ขอยก โศลก (Sloka) ประวัติศาสตร์ของสองปรมาจารย์แห่งนิกายเซน มาเป็นกุญแจในการถอดรหัสความหมายของเกม</p>
+            
+            <h4>11.1 โศลกแห่งวงจรการต่อสู้ (สภาวะที่ยังเวียนว่าย)</h4>
+            <p>โศลกบทแรกแต่งโดย ท่านเสินซิ่ว (ชินเชา) ซึ่งเป็นตัวแทนของการอธิบายวงจรที่ <span class="awareness">สติ</span> <span class="ego">ตัวตน</span> และ <span class="suffering">ทุกขเวทนา</span> กำลังน้ำหั่นกันในกระดาน:</p>
+            <div class="highlight">
+                "กายคือต้นโพธิ์ ใจคือกระจกเงาใส ต้องหมั่นเช็ดถูอยู่เสมอ อย่าให้ฝุ่นละอองจับเกาะได้"
+            </div>
+            <p><strong>การตีความใน PMATCG:</strong> กระจกเงาใสเปรียบเสมือน <span class="awareness">สติ (Awareness)</span> ที่มนุษย์พยายามรักษาไว้ ส่วนฝุ่นละอองคือ <span class="suffering">ทุกขเวทนา (Suffering)</span> และ <span class="ego">ตัวตน</span> ที่คอยจะเข้ามากลืนกินและทำให้กระจกขุ่นมัว โศลกนี้ชี้ให้เห็นสภาวะของมนุษย์ทั่วไป ที่ยังติดอยู่ในเกมแห่งการเอาชนะ ต้องคอยใช้<span class="awareness">สติ</span>ไปดับทุกข์ และระวังไม่ให้<span class="ego">ตัวตน</span>กลับมาบังครอบ<span class="awareness">สติ</span> มันคือ "การต่อสู้ที่ไม่มีวันจบสิ้น" ตราบใดที่เรายังเชื่อว่ามีกระจก (มี<span class="ego">ตัวตน</span>) ให้ต้องคอยรักษา และมีฝุ่น (ความพ่ายแพ้/ความเจ็บปวด) ให้ต้องคอยปัดกวาด</p>
+            
+            <h4>11.2 โศลกแห่งสุญญตา (สภาวะการตื่นรู้)</h4>
+            <p>เมื่อ ท่านฮุ่ยเหนิง (เว่ยหลาง) พระสังฆปริณายกองค์ที่ 6 ได้ฟังโศลกบทแรก ท่านจึงแต่งโศลกตอบโต้ ซึ่งโศลกบทนี้คือการ "ทุบกระดาน" ที่ธาตุทั้งสามกำลังต่อสู้กันอยู่ให้แหลกละเอียด:</p>
+            <div class="highlight" style="border-left-color: #805ad5;">
+                "เดิมทีไร้ต้นโพธิ์ ทั้งไร้กระจกเงาอันผ่องใส แรกเริ่มเดิมทีนั้นว่างเปล่า ไร้สรรพสิ่ง แล้วฝุ่นละอองจะไปจับเกาะที่ตรงไหน?"
+            </div>
+            <p><strong>การตีความใน PMATCG (วิถีแห่งท่านฮุ่ยเหนิง):</strong> แท้จริงแล้วไม่มีกระจก (ไม่มี<span class="awareness">สติ</span>ที่ต้องฝืนสร้าง) และไม่มีฝุ่นละออง (ไม่มี<span class="ego">ตัวตน</span>หรือความทุกข์ที่เป็นแก่นสาร) เมื่อไม่มี "ตัวกู" ให้ฝุ่นมาจับเกาะ วงจรของการต่อสู้ขบกัดระหว่าง <span class="awareness">สติ</span>, <span class="suffering">ทุกขเวทนา</span> และ <span class="ego">ตัวตน</span> จึงขาดสะบั้นลง</p>
+            
+            <p>ซึ่งสอดคล้องกับคำสอนรวบยอดของปรมาจารย์เซนรุ่นเหลน ที่ชี้ให้เห็นถึงแก่นแท้สูงสุด:</p>
+            <p style="font-style: italic; color: #d53f8c; padding-left: 15px; border-left: 3px solid #cbd5e0;">
+                "พระพุทธเจ้าทั้งปวงและสัตว์โลกทั้งสิ้น ไม่ได้เป็นอะไรเลย นอกจากเพียง 'จิตหนึ่ง' นอกเหนือจากจิตหนึ่งนี้แล้ว ไม่มีสิ่งใดดำรงอยู่... การใช้จิตไปแสวงหาจิต นั่นแหละคือความหลงผิดอย่างมหันต์ เพียงแต่หยุดความคิดปรุงแต่งเสียเท่านั้น จิตเดิมแท้ก็จะปรากฏ” - ท่านฮวงโป
+            </p>
+            
+            <p style="text-align: center; color: #a0aec0; font-size: 0.85em; margin-top: 30px;">[ 10 of 10 ]</p>
+        </div>
+
+        <!-- ENGLISH PAPER TRANSLATION -->
+        <div id="paper-en" class="scroll-box" style="display:none; margin-top:20px;">
+            <div class="page-divider"><span>--- PAGE 1 ---</span></div>
+            <h1>951971: The 1st Hard Fork</h1>
+            <h2>PMA Trading Card Game: A Hand-to-Hand Card Game Cash</h2>
+            <p style="text-align: center;"><strong>PMATCG(Pigrock)</strong></p>
+            <p style="text-align: center;"><span class="code-text">Nostr: npub1u69smj42umzck7f20zae0x8lxwn2f802pccdxsvjnwrma4ajqzcscfgtps</span></p>
+            
+            <h3>Abstract</h3>
+            <p><strong>PMA TCG = Trading Card Game + Art + Cash</strong></p>
+            
+            <h3>1. Introduction</h3>
+            <p>PMA TCG (PMA Trading Card Game) is an integration of a trading card game, handmade art, and Physical Cash. It utilizes Bitcoin's absolute scarcity mechanism to deliver value directly between creators and players (Value for Value) without intermediaries. Players can verify the authenticity of the cards themselves through a public data system (Nostr).</p>
+            
+            <h3>2. First Trade & Genesis Cards</h3>
+            <p><strong>Production Mechanism (Halving):</strong> The initial production rate is 1 card per 1,008 blocks. When a Halving occurs, the production time is doubled (to 2,016, 4,032, and 8,064 blocks per card, respectively). The 1st PMATCG Halving begins at block 105,000.</p>
+            <p><strong>First Trade (Hand-to-Hand Exchange):</strong> To preserve V4V value, every card's initial trade must be handed directly from the creator to the supporter in various #SIAMSTR community meetups.</p>
+            <p><strong>The Genesis Cards:</strong> Will be launched and distributed into the network for the first time on May 22, 2026, at the Bitcoin Pizza Day 2026 event (Chit Terminal).</p>
+            
+            <h3>3. Timestamp Server</h3>
+            <p>Every card will be stamped with a "Block Height" to act as the card's Timestamp, which plays two important roles:</p>
+            <ol>
+                <li><strong>#Siamstr Diary:</strong> Confirms the timeline and events occurring within the #Siamstr community.</li>
+                <li><strong>Gameplay Mechanism:</strong> Uses the block number to determine the status, class, and element of the cards produced in that block, referencing data from the Bitcoin system to drive the game's engine.</li>
+            </ol>
+
+            <div class="page-divider"><span>--- PAGE 2 ---</span></div>
+            
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <h3>4. Physical Proof-of-Work (PPoW)</h3>
+            <p>Every card is created by hand (Handmade) with content referencing real events during that time. These labor and time constraints (PPoW) help prevent mass card printing (Anti-spam) and ensure each card has a unique identity that cannot be reproduced.</p>
+            
+            <h3>5. Network Distribution</h3>
+            <p>The data of every card will be recorded and published directly on the Nostr protocol to act as a decentralized Public Ledger, secure from deletion or modification. The PMATCGV game is used to fetch data and distribute card files. Additionally, the system allows downloading files in Print-and-Play format so players can print and play for free. This mechanism creates a Win-Win scenario: players gain instant access to fun, while creators distribute their work to society.</p>
+            
+            <h3>6. Incentive</h3>
+            <p><strong>First Trade:</strong> The price of every card from the creator will always be pegged at 21,000 Sats to establish a standard price and maintain the network's economic value.</p>
+            <p><strong>Annual Championship:</strong> The PMATCG Hand-to-Hand Championship (H2H Championship) will be held every year on Bitcoin Pizza Day (starting in 2027), allowing only authentic cards to participate.</p>
+            
+            <h3>7. Verification</h3>
+            <p>All players can immediately verify the authenticity of the card in their hand by comparing the physical characteristics of the card with the high-resolution image database on the public ledger.</p>
+
+            <div class="page-divider"><span>--- PAGE 3 ---</span></div>
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <h3>The Genesis Card Data</h3>
+            
+            <div class="card-box">
+                <h4>#00A. WIM?, Splatter (<span class="whale">Class: Whale</span>) 939999 [<span class="liquid">Liquid</span>]</h4>
+                <p class="code-text">000000000000000000007e95c9885d9eb2d67a3b7027d678376bb487323004ca</p>
+                <p><strong>Stats:</strong> HP 9 | ATT 9 | DEF 9 | SPD 3 | BPoW: 16</p>
+                <p><strong>Passive Skill:</strong> Dice roll phase; Pay X HP, +X POW</p>
+                <p><strong>SPoW:</strong> Pay 2 PoW: If target Node dodges, it rolls 2 dice and takes the lower result.</p>
+            </div>
+
+            <div class="card-box">
+                <h4>#00B. CHIT, CraftBeernardo (<span class="miner">Class: Miner</span>) 944828 [<span class="ego">Ego</span>]</h4>
+                <p class="code-text">0000000000000000000037beb759c4c60295efd78583c1ca02addd7587934ae1</p>
+                <p><strong>Stats:</strong> HP 8 | ATT 2 | DEF 8 | SPD 1 | BPoW: 9</p>
+                <p><strong>SPoW:</strong> Pay 1 PoW, Pay 2 HP: +4 ATT</p>
+            </div>
+
+            <div class="card-box">
+                <h4>#00C.* PIRANYA, Donutello (<span class="node">Class: BTC Node</span>) 945664 [<span class="terra">Terra</span>]</h4>
+                <p class="code-text">00000000000000000000289d2f75320161f2d9e3f684821112a7d6abae7afb9c</p>
+                <p><strong>#00D. Stats:</strong> HP 4 | ATT 6 | DEF 6 | SPD 2 | BPoW: 9</p>
+                <p><strong>SPoW:</strong> Pay 3 PoW(Attack phase only): Target Node becomes Asleep.</p>
+            </div>
+
+            <div class="card-box">
+                <h4>MM, MAY O'Neil (<span class="investor">Class: Investor</span>) 947173 [<span class="fire">Fire</span>]</h4>
+                <p class="code-text">00000000000000000000581b3738e2443ed2deaa69c55d0e3825499b65380073</p>
+                <p><strong>Stats:</strong> HP 3 | ATT 7 | DEF 1 | SPD 3 | BPoW: 8</p>
+                <p><strong>SPoW:</strong> Pay 2 PoW: +1 SPD and heals 1 HP(up to max).</p>
+            </div>
+
+            <div class="card-box">
+                <h4>#00E. SMART COIN, Savephael (<span class="cypherpunk">Class: Cypherpunk</span>) 949068 [<span class="awareness">Awareness</span>]</h4>
+                <p class="code-text">00000000000000000000cd82663a4f607bb1e8a69d0ace429e8717a6f8172a9d</p>
+                <p><strong>Stats:</strong> HP 8 | ATT 6 | DEF 0 | SPD 2 | BPoW: 8</p>
+                <p><strong>SPoW:</strong> Pay 2 PoW(Attack phase only): Target Node, SPD becomes 0</p>
+            </div>
+
+            <div class="card-box">
+                <h4>#00F. PMA, Machelangelo (<span class="hodl">Class: HODL</span>) 949337 [<span class="fire">Fire</span>]</h4>
+                <p class="code-text">0000000000000001223535da6ec0c52a5d9552c48f63e2268155d91265eb</p>
+                <p><strong>Stats:</strong> HP 7 | ATT 3 | DEF 3 | SPD 2 | BPoW: 8</p>
+                <p><strong>SPoW:</strong> Pay 2 PoW: +2 SPD</p>
+            </div>
+
+            <div class="page-divider"><span>--- PAGE 4 ---</span></div>
+            <h3>8. Gameplay Protocol</h3>
+            <h4>8.1 1V1 Game Mode (1PMA = 1PMA)</h4>
+            <p><strong>Objective:</strong> Reduce the opposing Node's HP to 0.</p>
+            <p><strong>Equipment:</strong> 1 Node card per side, 3 six-sided dice (D6) per side.</p>
+            
+            <p><strong>//SET UP</strong></p>
+            <p><strong>Sync Phase (Game Start):</strong> Compare the SPD stats of both Nodes. The side with higher SPD becomes the Attacker first. (If tied, roll dice to decide).</p>
+            
+            <p><strong>//START GAME &gt;&gt;&gt; The turn is divided into 4 Phases:</strong></p>
+            <h4>1. Attack Phase (Attacker):</h4>
+            <ul>
+                <li><strong>Dice Roll:</strong> Attacker rolls 3 dice (Triple Rule: If all 3 dice show the same number, +3 SPD for 1 Turn). Players can pay 2 HP to gain 2 PoW (Overclock, max 1 time/turn).</li>
+                <li><strong>Activate (Turn Node Online):</strong> Sacrifice any number of dice to sum their values as PoW. Pay PoW equal to BPoW to change the Node to Online status (ready for command).<br>
+                <span style="font-size: 0.9em; color: #7f8c8d;">Note: If PoW is insufficient, the Node is Offline: Cannot Boost & Command, and DEF is halved (rounded up).</span></li>
+                <li><strong>Boost (Optional):</strong>
+                    <ul>
+                        <li><strong>Active Skill (SPoW):</strong> Use remaining PoW to pay the SPoW cost and activate the skill (Limit 1 time/skill).</li>
+                        <li><strong>Dash:</strong> Sacrifice 1 unused die to give the Node Dash status (Total Attack = ATT + SPD).</li>
+                        <li><strong>Command:</strong> Order the Node to Attack the target or go Offline.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <div class="page-divider"><span>--- PAGE 5 ---</span></div>
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <h4>2. Defense Phase (Defender):</h4>
+            <ul>
+                <li><strong>Dice Roll:</strong> Defender rolls 3 dice (Triple Rule: If all 3 dice show the same number, +3 SPD for 1 Turn). Players can pay 2 HP to gain 2 PoW (Overclock, max 1 time/turn).</li>
+                <li><strong>Activate (Turn Node Online):</strong> Sacrifice any number of dice to sum their values as PoW. Pay PoW equal to BPoW to change the Node to Online status (ready for command).<br>
+                <span style="font-size: 0.9em; color: #7f8c8d;">Note: If PoW is insufficient, the Node is Offline: Cannot Boost & Command, and DEF is halved (rounded up).</span></li>
+                <li><strong>Boost (Optional):</strong>
+                    <ul>
+                        <li><strong>Active Skill (SPOW):</strong> Use remaining PoW to pay the SPoW cost and activate the skill (Limit 1 time/skill).</li>
+                        <li><strong>Dodge:</strong> Sacrifice 1 unused die to unlock the Dodge stance.</li>
+                        <li><strong>Command:</strong> Order the Node to Defend (choose 1) or go Offline:
+                            <ul>
+                                <li><strong>Defend:</strong> Use DEF to mitigate the attack.</li>
+                                <li><strong>Dodge:</strong> Can be done if the Boost Dodge condition is met.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h4>3. Settle Phase (Resolution):</h4>
+            <p>Calculate damage based on the defender's choice (If attacker's ATT &le; 0, Damage = 0):</p>
+            <ul>
+                <li><strong>If Defend (or Offline) is chosen:</strong> Damage = Attacker's ATT - Defender's DEF. (Minimum damage is always 1 if ATT > 0).</li>
+            </ul>
+
+            <div class="page-divider"><span>--- PAGE 6 ---</span></div>
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <ul>
+                <li><strong>If Dodge is chosen:</strong> Both players roll 1 die + their respective SPD stats.
+                    <ul>
+                        <li>Attacker > Defender (Dodge Failed): Takes full direct damage (Damage = Attacker's ATT, DEF is ignored).</li>
+                        <li>Attacker < Defender (Dodge Successful): Takes no damage (Damage = 0).</li>
+                        <li>Tie: Reroll to decide.</li>
+                    </ul>
+                </li>
+                <li><strong>HP Deduction:</strong> Deduct the calculated Damage from the Defender's HP.</li>
+            </ul>
+            
+            <h4>4. End Phase:</h4>
+            <ul>
+                <li><strong>Clear Status:</strong> Cancel all temporary Stat changes this turn. Status Ailments persist or are cleared according to their specific conditions.</li>
+                <li><strong>Swap Roles:</strong> Defender becomes the Attacker, and the Attack Phase starts anew.</li>
+                <li><strong>Shutdown:</strong> If any Node's HP is reduced to 0, it is Shutdown and removed from the field. Any player with no Nodes is defeated. The winner gains 1 Point, and the game resets for the next round.</li>
+                <li><strong>Game Over:</strong> The first player to reach 2 Points wins the match.</li>
+            </ul>
+            
+            <h4>Conditions:</h4>
+            <ol>
+                <li><strong>Online:</strong> The controller can Boost & Command this Node.</li>
+                <li><strong>Offline:</strong> The controller cannot Boost & Command this Node. Its DEF is halved (rounded up).</li>
+            </ol>
+            
+            <h4>Status Ailments:</h4>
+            <ul>
+                <li><strong>Muted:</strong> Cannot use skills (SPoW). (Cleansed upon entering Offline state).</li>
+                <li><strong>Overheat:</strong> Cannot use Overclock. (Cleansed upon entering Offline state).</li>
+                <li><strong>51%Att:</strong> When the card enters Offline state, it instantly takes 1 HP damage. (Cleansed upon entering Online state).</li>
+                <li><strong>Bug:</strong> Swaps own base ATT and base DEF stats. (Expires at the end of the turn).</li>
+                <li><strong>Virus:</strong> Randomly inflicts 1 status ailment (or no effect).</li>
+                <li><strong>Asleep:</strong> Forces Offline state and cancels attacks. Wakes up (cleansed) upon taking damage, or automatically at the end of the turn.</li>
+            </ul>
+            
+            <h4>8.2 House Rules</h4>
+            <p>This game is designed as an open-source Core Protocol. Players are encouraged to modify, create new rules, and share them with the community.</p>
+
+            <div class="page-divider"><span>--- PAGE 7 ---</span></div>
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <h3>9. Conclusion</h3>
+            <p>The ultimate goal of PMA TCG is to be a card game, an art piece, and Physical Cash simultaneously. It also serves as a catalyst for players, both young and old, to become curious about the Bitcoin system and Buddhism, potentially leading them to further study. We want players to enjoy playing, collecting, spending, and learning.</p>
+            
+            <h3>10. Formula</h3>
+            <p>Every Node card has its HP, ATT, DEF, and SPD determined by Bitcoin Blockchain data.</p>
+            <ul>
+                <li>HP is the unit digit of the Block Height.</li>
+                <li>ATT is the tens digit of the Block Height.</li>
+                <li>DEF is the hundreds digit of the Block Height.</li>
+                <li>SPD is found by scanning for the numbers 1-3 from the end of the Block Hash backwards. The first number found becomes the SPD (0 if none found).</li>
+            </ul>
+            <p>Then, formulas are applied to determine the PoW cost, Class, and Element.</p>
+            
+            <h4>10.1 BPoW Calculation Formula</h4>
+            <p>The formula maintains balance: Cards with high stats require higher dice rolls to play, while cards with low stats are easier to command or use skills.</p>
+            <p><strong>BPoW Formula:</strong> <span class="code-text">BPOW = ((HP+ATT+DEF)/2)+SPD-1</span> (Rounded up standardly)</p>
+            
+            <h4>10.2 Class Formula</h4>
+            <p>Cards are classified based on their "Status" using a "Waterfall Formula" (Evaluated from 1 to 6. The first matching condition determines the class).</p>
+
+            <div class="page-divider"><span>--- PAGE 8 ---</span></div>
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <h4>Condition Sequence:</h4>
+            <ol>
+                <li><span class="whale">Whale:</span> PoW &ge; 12 (Spends heavily, every move shakes the industry).</li>
+                <li><span class="miner">Miner:</span> DEF &ge; 7 and DEF &gt; ATT (Tough, durable, searching for the one truth).</li>
+                <li><span class="node">BTC Node:</span> ATT &ge; 4 and DEF &ge; 4 (Walks the middle path, unattached).</li>
+                <li><span class="investor">Investor:</span> SPD = 3 (Maximum speed to seize every opportunity).</li>
+                <li><span class="cypherpunk">Cypherpunk:</span> ATT &ge; 5 or ATT &le; 1 (Formless, code is truth).</li>
+                <li><span class="hodl">HODL:</span> (Doesn't match 1 to 5) (Hold long, forget, save for descendants).</li>
+            </ol>
+            
+            <h4>(Class Advantage)</h4>
+            <p><strong>Set 1: Treasure Cycle</strong></p>
+            <ul>
+                <li><span class="whale">Whale</span> beats <span class="hodl">HODL</span></li>
+                <li><span class="hodl">HODL</span> beats <span class="miner">Miner</span></li>
+                <li><span class="miner">Miner</span> beats <span class="whale">Whale</span></li>
+            </ul>
+            <p><strong>Set 2: Network Cycle</strong></p>
+            <ul>
+                <li><span class="investor">Investor</span> beats <span class="cypherpunk">Cypherpunk</span></li>
+                <li><span class="cypherpunk">Cypherpunk</span> beats <span class="node">BTC Node</span></li>
+                <li><span class="node">BTC Node</span> beats <span class="investor">Investor</span></li>
+            </ul>
+            <p><small>* Class Advantage has no effect in 1V1 mode (Intended for custom game modes).</small></p>
+            
+            <h4>10.3 Element Formula</h4>
+            <p>Scan for English letters (a-f) from the end of the Block Hash backwards. The first letter found determines the Element:</p>
+            <ul>
+                <li>a = <span class="liquid">Liquid</span></li>
+                <li>b = <span class="fire">Fire</span></li>
+                <li>c = <span class="terra">Terra</span></li>
+                <li>d = <span class="awareness">Awareness</span></li>
+                <li>e = <span class="ego">Ego</span></li>
+                <li>f = <span class="suffering">Suffering</span></li>
+            </ul>
+
+            <div class="page-divider"><span>--- PAGE 9 ---</span></div>
+            <h4>(Element Advantage)</h4>
+            <p><strong>Set 1: Nature Cycle</strong></p>
+            <ul>
+                <li><span class="liquid">Liquid</span> beats <span class="fire">Fire</span></li>
+                <li><span class="fire">Fire</span> beats <span class="terra">Terra</span></li>
+                <li><span class="terra">Terra</span> beats <span class="liquid">Liquid</span></li>
+            </ul>
+            <p><strong>Set 2: Original Mind Cycle</strong></p>
+            <ul>
+                <li><span class="awareness">Awareness</span> beats <span class="suffering">Suffering</span></li>
+                <li><span class="suffering">Suffering</span> beats <span class="ego">Ego</span></li>
+                <li><span class="ego">Ego</span> beats <span class="awareness">Awareness</span></li>
+            </ul>
+            <p><small>* Element Advantage has no effect in 1V1 mode (Intended for custom game modes).</small></p>
+            
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <h3>11. Appendix</h3>
+            <p>Reference Links:<br>
+            <a href="https://youtu.be/aCrBLwba7-4?si=sPNi6bMtqWAIPQ9q" target="_blank" class="code-text">https://youtu.be/aCrBLwba7-4?si=sPNi6bMtqWAIPQ9q</a><br>
+            <a href="https://youtu.be/paiVRqefCA?si=VuJpKKLSTXL208R9" target="_blank" class="code-text">https://youtu.be/paiVRqefCA?si=VuJpKKLSTXL208R9</a></p>
+            
+            <p>The "Original Mind" cycle in PMATCG's elemental system is not just a mechanic of advantage and disadvantage; it simulates the awakening of the human mind, dividing the components into 3 elements of Samsara:</p>
+            <ol>
+                <li><strong><span class="awareness">Awareness</span>:</strong> Consciousness, the effort to maintain clarity.</li>
+                <li><strong><span class="ego">Ego</span>:</strong> Self-attachment, the clinging to "me and mine".</li>
+                <li><strong><span class="suffering">Suffering</span>:</strong> Pain, pressure, and incoming defilements.</li>
+            </ol>
+            
+            <h4>The Cycle of Illusion</h4>
+            <ul>
+                <li><strong><span class="awareness">Awareness</span> extinguishes (beats) <span class="suffering">Suffering</span>:</strong> The unattached do not sink into the abyss of suffering.</li>
+                <li><strong><span class="suffering">Suffering</span> crushes (beats) <span class="ego">Ego</span>:</strong> When suffering from impermanence crushes the ego and shatters self-attachment.</li>
+                <li><strong><span class="ego">Ego</span> swallows (beats) <span class="awareness">Awareness</span>:</strong> When intoxicated by the ego, the brilliant light of wisdom is obscured by clouds.</li>
+            </ul>
+
+            <div class="page-divider"><span>--- PAGE 10 ---</span></div>
+            <p><strong>951971: The 1st Hard Fork</strong></p>
+            <p>To explain the essence of this cycle, PMATCG uses the historical Slokas (poems) of two Zen patriarchs as the key to decoding the game's meaning.</p>
+            
+            <h4>11.1 The Sloka of the Struggle Cycle (The State of Samsara)</h4>
+            <p>The first Sloka, composed by Shenxiu (Jinshu), represents the explanation of the cycle where <span class="awareness">Awareness</span>, <span class="ego">Ego</span>, and <span class="suffering">Suffering</span> are battling on the board:</p>
+            <div class="highlight">
+                "The body is the Bodhi tree, the mind is like a clear mirror. Always strive to polish it, and let no dust alight."
+            </div>
+            <p><strong>Interpretation in PMATCG:</strong> The clear mirror is like <span class="awareness">Awareness</span> that humans try to maintain. The dust is <span class="suffering">Suffering</span> and <span class="ego">Ego</span> that constantly try to consume and cloud the mirror. This Sloka shows the state of ordinary humans, stuck in the game of winning, constantly using <span class="awareness">Awareness</span> to extinguish suffering, and guarding against the <span class="ego">Ego</span> overshadowing <span class="awareness">Awareness</span>. It is a "never-ending battle" as long as we believe there is a mirror (an <span class="ego">Ego</span>) to maintain, and dust (defeat/pain) to sweep away.</p>
+            
+            <h4>11.2 The Sloka of Emptiness (The State of Awakening)</h4>
+            <p>When Huineng (Eno), the 6th Patriarch, heard the first Sloka, he composed a counter-Sloka. This Sloka "smashes the board" where the three elements are fighting into pieces:</p>
+            <div class="highlight" style="border-left-color: #805ad5;">
+                "Fundamentally no Bodhi-tree exists, nor the frame of a mirror bright. Since all is void from the beginning, where can the dust alight?"
+            </div>
+            <p><strong>Interpretation in PMATCG (Huineng's Path):</strong> In truth, there is no mirror (no <span class="awareness">Awareness</span> that needs to be forced) and no dust (no <span class="ego">Ego</span> or suffering with substance). When there is no "self" for the dust to alight upon, the cycle of the biting struggle between <span class="awareness">Awareness</span>, <span class="suffering">Suffering</span>, and <span class="ego">Ego</span> is broken.</p>
+            
+            <p>This aligns with the ultimate teaching of the Zen master's great-grand-disciple, pointing to the highest essence:</p>
+            <p style="font-style: italic; color: #d53f8c; padding-left: 15px; border-left: 3px solid #cbd5e0;">
+                "All the Buddhas and all sentient beings are nothing but the One Mind, beside which nothing exists... Using the mind to seek Mind is the greatest mistake. Only when conceptual thinking is halted will the Original Mind appear." - Master Huangbo
+            </p>
+            
+            <p style="text-align: center; color: #a0aec0; font-size: 0.85em; margin-top: 30px;">[ 10 of 10 ]</p>
+        </div>
+    </div>
+    <!-- END PMATCG PAPER SCREEN -->
+
+    <div id="pmatcg-gallery-modal" class="fullscreen-screen" style="display:none; background:var(--bg-color); flex-direction:column;">
+        <h2 id="gallery-title" style="color:var(--highlight); margin-top:30px; text-transform: uppercase;">Select Your Character (Player 1)</h2>
+        <div id="gallery-container" style="display:flex; overflow-x:auto; overflow-y:hidden; align-items:center; width:95%; padding:20px; gap:20px; flex:1;">
+            </div>
+        <div style="padding-bottom: 30px;">
+            <button id="gallery-back-btn" class="btn" onclick="pmatcgSelectionStep=1; document.getElementById('pmatcg-gallery-modal').style.display='none'; document.getElementById('cover-screen').style.display='flex';" style="font-size: 1.2em; padding: 10px 30px;">🔙 Back to Menu</button>
+        </div>
+    </div>
+
+    <div id="pmatcg-detail-modal" class="modal">
+        <div class="modal-content" style="text-align:center;">
+            <div id="detail-card-display" style="display:flex; justify-content:center; margin-bottom:20px; width: 100%;"></div>
+            <button class="btn primary" id="btn-play-friend" style="width:100%; margin-bottom:10px; font-size: 1.1em; padding: 10px;">👥 ลองเล่นกับเพื่อน</button>
+            <button class="btn" id="btn-play-bot" style="width:100%; margin-bottom:10px; background:#e65100; border-color:#ff9800; font-size: 1.1em; padding: 10px; color: white;">🤖 ลองเล่นกับSATOSHI</button>
+            <button class="btn primary" id="btn-battle" style="display:none; width:100%; margin-bottom:10px; font-size: 1.1em; padding: 10px; background: #d500f9; border-color: #aa00ff;">⚔️ BATTLE!</button>
+            <button id="detail-back-btn" class="btn" onclick="document.getElementById('pmatcg-detail-modal').style.display='none';" style="width:100%; padding: 10px;">🔙 ย้อนกลับ</button>
+        </div>
+    </div>
+
+    <div id="th-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #d500f9; text-align: center; margin-top: 0; text-transform: uppercase;">Timechain HERO</h2>
+            <p id="th-subtitle" style="text-align: center; font-size: 0.85em; color: #aaa;">ป้อนข้อมูลเพื่อสร้าง Custom Node (ต่อสู้กับบอทแบบเอาชีวิตรอด)</p>
+            
+            <div class="th-input-group">
+                <label id="th-l1">1. BTC Block Height (0 - 9999999)</label>
+                <input type="number" id="th-height" placeholder="เช่น 851294" min="0" max="9999999">
+                <small id="th-s1" style="color: #888;">(หน่วย=HP, สิบ=ATT, ร้อย=DEF)</small>
+            </div>
+            
+            <div class="th-input-group">
+                <label id="th-l2">2. Hash Number (1-3) <small>หาจากหลังมาหน้า เจออะไรก่อนใส่ตัวนั้น (ไม่เจอใส่ 0)</small></label>
+                <select id="th-hash-num">
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="0">0 (ไม่เจอ)</option>
+                </select>
+                <small id="th-s2" style="color: #888;">(ใช้กำหนดค่า SPD)</small>
+            </div>
+            
+            <div class="th-input-group">
+                <label id="th-l3">3. Hash Letter (a-f) <small>หาจากหลังมาหน้า เจออะไรก่อนใส่ตัวนั้น</small></label>
+                <select id="th-hash-char">
+                    <option value="a">a (💧 Liquid (น้ำ))</option>
+                    <option value="b">b (🔥 Fire (ไฟ))</option>
+                    <option value="c">c (🌳 Terra (ดิน))</option>
+                    <option value="d">d (🔆 Awareness (สติ))</option>
+                    <option value="e">e (🎃 Ego (ตัวตน))</option>
+                    <option value="f">f (👿 Suffering (ทุกขเวทนา))</option>
+                </select>
+                <small id="th-s3" style="color: #888;">(ใช้กำหนดธาตุประจำตัว)</small>
+            </div>
+
+            <div class="th-input-group">
+                <label id="th-l4">4. เลือกความสามารถ SPoW</label>
+                <select id="th-spow">
+                    <option value="heal">SPoW1(จ่าย PoW1) : heal 1 HP</option>
+                    <option value="att">SPoW1(จ่าย PoW1) : +1 ATT</option>
+                    <option value="def">SPoW1(จ่าย PoW1) : +1 DEF</option>
+                    <option value="spd">SPoW2(จ่าย PoW2) : +1SPD</option>
+                    <option value="muted">SPoW2 (จ่าย PoW2) : Target Node become Muted(🔕)(This Node cannot use SPoW. Cleared when Offline.)</option>
+                    <option value="overheat">SPoW2 (จ่าย PoW2) : Target Node become Overheat(📛)(This Node cannot use Overclock. Cleared when Offline.)</option>
+                    <option value="51att">SPoW3 (จ่าย PoW3) : Target Node become 51%Att(☸️)(Whenever this Node goes Offline, it immediately takes 1 damage. Cleared when Online.)</option>
+                    <option value="bug_any">SPoW4 (จ่าย PoW4) : Target Node become Bug (🐞)(Swap this Node's ATT and DEF Cleared when Clear phase)</option>
+                    <option value="virus">SPoW5 (จ่าย PoW5) : Target Node become virus (🦠) (สุ่ม 1 สถานะ: 1=Overheat(📛), 2=Muted(🔕), 3=51%Att(☸️), 4=Bug(🐞), 5=Asleep(💤), 6=ไม่มีผล)</option>
+                    <option value="asleep">SPoW6 (จ่าย PoW6) Target Node become Asleep(💤) : This Node becomes Offline. Cancel its attack if it is currently attacking. It Wakes Up (removes Offline status) if it takes damage. Cleared when Clear phase.</option>
+                </select>
+            </div>
+
+            <button id="generate-th-btn" class="btn primary" style="width: 100%; font-size: 1.2em; padding: 12px; background: #d500f9; border-color: #aa00ff;">Generate & Start Battle!</button>
+            <button id="close-th-btn" class="btn" style="width: 100%; margin-top: 10px;">ยกเลิก</button>
+        </div>
+    </div>
+
+    <div id="rules-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 10px;">
+                <h2 id="rules-title" style="color: var(--highlight); margin: 0;">Protocol</h2>
+                <button id="close-rules-btn" class="btn primary">ปิด</button>
+            </div>
+            <div id="rules-content" style="margin-top: 15px;">
+                <!-- Content handled by JS langDict -->
+            </div>
+        </div>
+    </div>
+
+    <div id="main-ui">
+        <header>
+            <h2 style="margin: 0; font-size: 1.2em; text-transform: uppercase;">PMATCGV_0113_951971</h2>
+        </header>
+        <div id="game-container">
+            <div id="p1-board" class="player-board">
+                <h3 style="color: var(--p1-color); margin: 5px 0;"><span id="p1-name-display">จิตเดิมแท้</span><br class="mobile-only" style="display: none;"> (<span id="p1-points">0</span>)</h3>
+                <div id="p1-card-display" style="width: 100%; display: flex; justify-content: center;"></div>
+                <div id="p1-dice" class="dice-container"></div>
+            </div>
+            <div id="center-console" style="position: relative;">
+                <div id="log-wrapper">
+                    <div id="log-header" onclick="toggleLog()">
+                        <span style="flex:1; cursor:pointer;">📝 Combat Log</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span id="status-toggle-btn" onclick="toggleStatusLegend(event)" style="font-size:10px; padding:3px 8px; background:#222; color:#ccc; border-radius:4px; border:1px solid #555; cursor:pointer; transition:0.2s; user-select:none;">ℹ️ Status Info</span>
+                            <span id="log-toggle-icon" style="cursor:pointer; padding: 0 5px;">▼</span>
+                        </div>
+                    </div>
+                    <div id="log-box"></div>
+                    <div id="status-legend-box">
+                        <div class="status-legend-item">🔕 <b>(Muted):</b> This Node cannot use SPoW. Cleared when Offline.</div>
+                        <div class="status-legend-item">📛 <b>(Overheat):</b> This Node cannot use Overclock. Cleared when Offline.</div>
+                        <div class="status-legend-item">☸️ <b>(51%Att):</b> Whenever this Node goes Offline, it immediately takes 1 damage. Cleared when Online.</div>
+                        <div class="status-legend-item">🐞 <b>(Bug):</b> Swap this Node's ATT and DEF. Cleared when Clear phase.</div>
+                        <div class="status-legend-item">🦠 <b>(Virus):</b> Apply 1 random status effect to this Node: 🔕, 📛, ☸️, 🐞, 💤 or nothing.</div>
+                        <div class="status-legend-item">💤 <b>(Asleep):</b> This Node becomes Offline. Cancel its attack if it is currently attacking. It Wakes Up (removes Offline status) if it takes damage. Cleared when Clear phase.</div>
+                    </div>
+                </div>
+                
+                <div id="action-panel">
+                    <h3 id="action-title" style="margin-top: 0; font-size: 1.1em;">System Boot...</h3>
+                    <div id="action-desc" style="font-size: 0.9em;"></div> 
+                    <div id="action-buttons" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 10px;"></div>
+                </div>
+            </div>
+            <div id="p2-board" class="player-board">
+                <h3 style="color: var(--p2-color); margin: 5px 0;"><span id="p2-name-display">SATOSHI</span><br class="mobile-only" style="display: none;"> (<span id="p2-points">0</span>)</h3>
+                <div id="p2-card-display" style="width: 100%; display: flex; justify-content: center;"></div>
+                <div id="p2-dice" class="dice-container"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+
+/** * ==========================================
+ * 🌸 MODULE SPLASH SCREEN
+ * ==========================================
+ */
+function showQuoteSplash(mainText, subText, durationMs, callback) {
+    const splash = document.getElementById('quote-splash-screen');
+    const mainEl = document.getElementById('splash-main-text');
+    const subEl = document.getElementById('splash-sub-text');
+
+    mainEl.innerHTML = mainText;
+    subEl.innerHTML = subText;
+    
+    splash.style.display = 'flex';
+    void splash.offsetWidth; 
+    splash.style.opacity = '1';
+    
+    setTimeout(() => {
+        if(callback) callback(); 
+        splash.style.opacity = '0';
+        setTimeout(() => {
+            splash.style.display = 'none';
+        }, 300);
+    }, durationMs);
+}
+
+/** * ==========================================
+ * 🌸 MODULE ZEN MODE (Isolated Sub-system)
+ * ==========================================
+ */
+let zenTypewriterInterval;
+let zenLang = "th";
+
+const zenData = {
+    th: {
+        1: {
+            story: "ตั้งแต่เช้าตรู่ ศาสตราจารย์ผู้รอบรู้เดินทางมาขอให้อาจารย์เซนสอนธรรมะให้ แต่ตลอดเวลาศาสตราจารย์เอาแต่พูดอวดความรู้ของตน อาจารย์เซนจึงรินชาให้แขก รินจนล้นถ้วยหกเลอะเทอะ ศาสตราจารย์..🌅🍵",
+            q: "จิตเดิมแท้คิดว่าศาสตราจารย์ จะทำอย่างไร?",
+            btn1: "หัวเราะเยาะเย้ย", btn1Res: "ศาสตราจารย์หัวเราะเยาะเย้ยว่าอาจารย์เซนขนาดรินน้ำชายังเอาตัวไม่รอดเลย แล้วจะมาสอนอะไรข้าได้…🤣 หลังจากนั้นศาสตราจารย์ก็เดินจากไป…👣", btn1Color: "black", btn1End: true,
+            btn2: "โวยวาย", btn2Res: "ศาสตราจารย์ ตะโกนขึ้นมาว่า \"หยุดรินได้แล้ว น้ำชาล้นแก้วแล้ว!” อาจารย์เซนจึงตอบว่า “ท่านก็เหมือนถ้วยชาใบนี้ที่เต็มไปด้วยทิฐิและความรู้เก่า หากไม่เทน้ำเก่าทิ้งก่อน ข้าจะรินเซนลงไปได้อย่างไร…🍵💬”", btn2Color: "white", btn2End: false
+        },
+        2: {
+            story: "ศาสตราจารย์อยากลองอวดภูมิธรรมบ้าง จึงพูดกับอาจารย์เซนว่า “ทุกสิ่งล้วนว่างเปล่า ไม่มีตัวตน ไม่มีเรา ไม่มีเขา ไม่มีพุทธะ ไม่มีบาปบุญ” อาจารย์เซนฟังเงียบๆ แล้วคว้ากล้องยาสูบฟาดหัวศาสตราจารย์อย่างแรง…💥",
+            q: "จิตเดิมแท้คิดว่าศาสตราจารย์ จะทำอย่างไร?",
+            btn1: "ชกหน้าอาจารย์เซน", btn1Res: "ศาสตราจารย์โมโหต่อยไปที่หน้าอาจารย์เซน1หมัด แล้วเดินจากไปด้วยความฉุดเฉียว…🥊", btn1Color: "black", btn1End: true,
+            btn2: "ชี้หน้าด่า", btn2Res: "ศาสตราจารย์โกรธจัดชี้หน้าด่า อาจารย์เซนจึงถามว่า “ในเมื่อทุกสิ่งว่างเปล่า แล้วความโกรธของเจ้ามาจากไหนล่ะ”…😡💢", btn2Color: "white", btn2End: false
+        },
+        3: {
+            story: "ศาสตราจารย์และอาจารย์เซน ชวนกันออกไปเดินเล่น ระหว่างทางศาสตราจารย์มองเห็นพระแก่เดินธุดงค์อยู่ไกลๆ…🏞️👤<br>ณ ลำธารที่น้ำเชี่ยว…🌊 พระแก่เดินธุดงค์พบหญิงสาวแต่งตัวสวยข้ามไม่ได้ พระแก่จึงอุ้มหญิงสาวข้ามฝั่งไป…💃",
+            q: "จิตเดิมแท้คิดว่าศาสตราจารย์ จะทำอย่างไร?",
+            btn1: "ตามผู้หญิงไปเพราะสวยน่ารักดี", btn1Res: "ศาสตราจารย์พบเจอคู่ชีวิต และอยู่ร่วมกันอย่างมีความสุข…👩‍❤️‍👨💞", btn1Color: "black", btn1End: true,
+            btn2: "ตามพระไปด้วยความสงสัย", btn2Res: "ศาสตราจารย์ทนไม่ไหวเลยชวนอาจารย์เซน ตามพระรูปนั้นไป แต่อาจารย์เซนบอกว่า ท่านไปเถอะ เด๋วเราจะไปเตรียมข้าวเย็นรอที่บ้าน”<br>…🛖<br>เมื่อศาสตราจารย์ตามไปจนถึง จึงถามพระแก่ว่า “ท่านเป็นพระ ท่านอุ้มสีกาได้อย่างไร\" พระแก่ตอบว่า \"ข้าปล่อยนางลงที่ริมฝั่งตั้งนานแล้ว ทำไมเจ้ายังแบกนางมาจนถึงตรงนี้ล่ะ”…💭💭", btn2Color: "white", btn2End: false
+        },
+        4: {
+            story: "ศาสตราจารย์กลับมากินข้าวเย็นกับอาจารย์เซนโดยไม่ได้พูดถึงเรื่องพระแก่คนนั้น…🍚🍚<br> ไม่นานศาสตราจารย์ก็กินข้าวจนหมด และเริ่มพูดขึ้นมาก่อนว่า “ข้าน้อยเริ่มรู้สึกเข้าใจเซนขึ้นมาบ้างแล้ว โปรดชี้แนะหนทางแห่งเซนแก่ข้าน้อยด้วย\" อาจารย์เซนถามว่า \"เจ้ากินข้าวเสร็จแล้วหรือยัง\"…👄",
+            q: "จิตเดิมแท้คิดว่าศาสตราจารย์ จะพูดว่าอะไร?",
+            btn1: "ข้าวที่นี่ไม่อร่อยเลย", btn1Res: "ศาสตราจารย์พูดออกมาด้วยความหงุดหงิด ถึงแม้เขาจะกินข้าวหมดเพราะความหิว แต่ก็ไม่พอใจในรสชาติอาหาร จึงบอกลาอาจารย์เซน และเดินทางกลับบ้านไป..👣🌄", btn1Color: "black", btn1End: true,
+            btn2: "กินเรียบร้อยแล้วครับ", btn2Res: "ศาสตราจารย์ตอบว่า \"กินเรียบร้อยแล้วครับ\" อาจารย์เซนจึงบอกว่า \"งั้นก็จงไปล้างชามของเจ้าเสียสิ\"…🥣", btn2Color: "white", btn2End: false
+        },
+        5: {
+            story: "และในคืนนั้น ทั้ง2 ได้นอนค้างแรมด้วยกัน…🌕 และเมื่อถึงเวลานอน ศาสตราจารย์จึงพูดถามอาจารย์เซนว่า: \"ท่านอาจารย์ ในการปฏิบัติธรรม มีเคล็ดลับหรือวิถีทางพิเศษอะไรบ้างหรือไม่?\"<br> อาจารย์เซน : \"มีสิ เมื่อหิวก็กิน เมื่ออ่อนเพลียง่วงนอนก็ไปนอน\"<br> ศาสตราจารย์ (ทำหน้างง): \"อ้าว คนทั่วไปเขาก็กินและนอนแบบนี้กันทุกคน ไม่ได้แปลว่าพวกเขาปฏิบัติธรรมเหมือนท่านอาจารย์หรอกหรือ?\"<br> อาจารย์เซน: \"ไม่เหมือนเลยสักนิด\"<br> ศาสตราจารย์: \"ไม่เหมือนอย่างไร ในเมื่อก็กินและนอนเหมือนกัน?\"<br> อาจารย์เซน: \"เวลาคนทั่วไปกินข้าว เขาไม่ได้อยู่กับการกิน แต่ในหัวเขาคิดปรุงแต่งฟุ้งซ่านไปร้อยแปดประการ และเวลาที่เขาล้มตัวลงนอน เขาก็ไม่ได้หลับลงไปจริงๆ แต่จิตใจของเขากังวลและวุ่นวายไปกับความฝันและความคิดนับพันประการ เพราะเหตุนี้ การกินการนอนของพวกเขาจึงไม่เหมือนกับข้า”…💤💤",
+            final: true, btnNext: "ต่อไป"
+        },
+        6: {
+            isEpilogue: true, btnClose: "กลับสู่เมนูหลัก",
+            content: "“พระพุทธเจ้าทั้งปวงและสัตว์โลกทั้งสิ้น ไม่ได้เป็นอะไรเลย นอกจากเพียง 'จิตหนึ่ง' นอกเหนือจากจิตหนึ่งนี้แล้ว ไม่มีสิ่งใดดำรงอยู่... การใช้จิตไปแสวงหาจิต นั่นแหละคือความหลงผิดอย่างมหันต์ เพียงแต่หยุดความคิดปรุงแต่งเสียเท่านั้น จิตเดิมแท้ก็จะปรากฏ”— ท่านฮวงโป"
+        }
+    },
+    en: {
+        1: {
+            story: "Since early morning, a learned professor came to ask a Zen master to teach him Dharma, but kept boasting about his own knowledge. The Zen master poured tea for his guest, pouring until the cup overflowed and spilled everywhere. The professor...🌅🍵",
+            q: "What do you think True Mind (the professor) will do?",
+            btn1: "Laugh mockingly", btn1Res: "The professor laughed mockingly that the Zen master couldn't even pour tea properly, let alone teach him anything...🤣 After that, the professor walked away...👣", btn1Color: "black", btn1End: true,
+            btn2: "Complain loudly", btn2Res: "The professor shouted, \"Stop pouring, the cup is full!\" The Zen master replied, \"You are like this teacup, full of your own opinions and old knowledge. If you don't empty your cup first, how can I pour Zen into it...🍵💬\"", btn2Color: "white", btn2End: false
+        },
+        2: {
+            story: "The professor wanted to show off his understanding, so he said to the Zen master, \"Everything is empty. There is no self, no you, no me, no Buddha, no sin, no merit.\" The Zen master listened quietly, then grabbed his smoking pipe and struck the professor hard on the head...💥",
+            q: "What do you think True Mind (the professor) will do?",
+            btn1: "Punch the Zen Master", btn1Res: "The professor furiously punched the Zen master once in the face and walked away in a rage...🥊", btn1Color: "black", btn1End: true,
+            btn2: "Point and scold", btn2Res: "The professor furiously pointed and scolded. The Zen master then asked, \"Since everything is empty, where did your anger come from?\"...😡💢", btn2Color: "white", btn2End: false
+        },
+        3: {
+            story: "The professor and the Zen master went for a walk. Along the way, the professor saw an old monk walking far ahead...🏞️👤<br>At a fast-flowing stream...🌊 The old monk found a beautifully dressed young woman who couldn't cross. The old monk picked her up and carried her across...💃",
+            q: "What do you think True Mind (the professor) will do?",
+            btn1: "Follow the woman", btn1Res: "The professor met his soulmate and they lived happily ever after...👩‍❤️‍👨💞", btn1Color: "black", btn1End: true,
+            btn2: "Follow the monk", btn2Res: "The professor couldn't stand it and asked the Zen master to follow the monk. But the Zen master said, \"You go ahead, I will prepare dinner at home.\"<br>...🛖<br>When the professor caught up, he asked the old monk, \"You are a monk, how could you carry a woman?\" The old monk replied, \"I put her down on the riverbank a long time ago. Why are you still carrying her all the way here?\"...💭💭", btn2Color: "white", btn2End: false
+        },
+        4: {
+            story: "The professor came back to have dinner with the Zen master without mentioning the old monk...🍚🍚<br> Soon, the professor finished eating and started speaking, \"I am beginning to understand Zen a little bit. Please guide me on the path of Zen.\" The Zen master asked, \"Have you finished eating your rice?\"...👄",
+            q: "What do you think True Mind (the professor) will say?",
+            btn1: "The food here is terrible", btn1Res: "The professor spoke out of frustration. Even though he finished the food out of hunger, he wasn't satisfied with the taste. He bid farewell to the Zen master and traveled back home...👣🌄", btn1Color: "black", btn1End: true,
+            btn2: "I have finished eating", btn2Res: "The professor answered, \"I have finished eating.\" The Zen master then said, \"Then go wash your bowl.\"...🥣", btn2Color: "white", btn2End: false
+        },
+        5: {
+            story: "That night, they stayed together...🌕 When it was time to sleep, the professor asked the Zen master: \"Master, in practicing Dharma, are there any special secrets or paths?\"<br> Zen Master: \"Yes, when hungry, eat. When tired and sleepy, sleep.\"<br> Professor (confused): \"Wait, everyone eats and sleeps like this. Does that mean they are all practicing Dharma like you, Master?\"<br> Zen Master: \"Not at all.\"<br> Professor: \"How is it different, since it is eating and sleeping alike?\"<br> Zen Master: \"When ordinary people eat, they are not present with the eating, their heads are full of wandering thoughts. And when they lie down to sleep, they don't truly sleep, but their minds are anxious and busy with thousands of dreams and thoughts. Because of this, their eating and sleeping are not like mine.\"...💤💤",
+            final: true, btnNext: "Next"
+        },
+        6: {
+            isEpilogue: true, btnClose: "Back to Main Menu",
+            content: "\"All the Buddhas and all sentient beings are nothing but the One Mind, beside which nothing exists... Using the mind to seek Mind is the greatest mistake. Only when conceptual thinking is halted will the Original Mind appear.\" — Master Huangbo"
+        }
+    }
+};
+
+let currentZenStage = 1;
+
+function startZenMode() {
+    document.getElementById('cover-screen').style.display = 'none';
+    document.getElementById('main-ui').style.display = 'none';
+    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    document.getElementById('pmatcg-gallery-modal').style.display = 'none';
+    document.getElementById('pmatcg-paper-screen').style.display = 'none';
+    
+    let container = document.getElementById('zen-mode-container');
+    container.style.display = 'flex';
+    container.style.backgroundColor = '#ffb6c1';
+    
+    let storyFrame = document.getElementById('zen-story-frame');
+    storyFrame.style.backgroundColor = 'rgba(255,105,180, 0.2)';
+    storyFrame.style.border = '4px solid white';
+    storyFrame.style.boxShadow = '0 0 20px rgba(255,255,255,0.5)';
+    storyFrame.style.textAlign = 'center';
+    storyFrame.style.fontSize = '1.5em';
+    
+    let storyEl = document.getElementById('zen-story-text');
+    storyEl.style.width = 'auto';
+    storyEl.style.maxWidth = 'none';
+    
+    document.getElementById('zen-choice-frame').style.display = 'flex';
+    
+    zenLang = currentLang;
+    document.getElementById('zen-lang-btn').innerText = zenLang === "th" ? "🇺🇸 EN" : "🇹🇭 TH";
+    
+    renderZenStage(1);
+}
+
+function exitZenMode() {
+    document.getElementById('zen-mode-container').style.display = 'none';
+    document.getElementById('cover-screen').style.display = 'flex';
+}
+
+function typeWriterEffect(element, text, speed = 25, callback) {
+    clearInterval(zenTypewriterInterval);
+    element.innerHTML = '';
+    let i = 0;
+    zenTypewriterInterval = setInterval(() => {
+        if (i < text.length) {
+            if (text.charAt(i) === '<') {
+                let tag = "";
+                while (text.charAt(i) !== '>' && i < text.length) {
+                    tag += text.charAt(i); i++;
+                }
+                tag += '>'; element.innerHTML += tag;
+            } else {
+                element.innerHTML += text.charAt(i); i++;
+            }
+        } else {
+            clearInterval(zenTypewriterInterval);
+            if(callback) callback();
+        }
+    }, speed);
+}
+
+function renderZenStage(stageNum) {
+    currentZenStage = stageNum;
+    let data = zenData[zenLang][stageNum];
+    let storyEl = document.getElementById('zen-story-text');
+    let choiceEl = document.getElementById('zen-choice-text');
+    let btnContainer = document.getElementById('zen-buttons');
+    let storyFrame = document.getElementById('zen-story-frame');
+    let choiceFrame = document.getElementById('zen-choice-frame');
+
+    storyFrame.style.flexDirection = "column";
+
+    if(data.isEpilogue) {
+        document.getElementById('zen-mode-container').style.backgroundColor = "white";
+        storyFrame.style.backgroundColor = "white";
+        storyFrame.style.border = "none";
+        storyFrame.style.boxShadow = "none";
+        storyFrame.style.textAlign = "left";
+        storyFrame.style.fontSize = "1em";
+        if(window.innerWidth <= 768) storyFrame.style.fontSize = "0.9em";
+
+        choiceFrame.style.display = 'none';
+
+        storyEl.style.animation = 'none';
+        storyEl.style.color = "black";
+        storyEl.style.width = "100%";
+        storyEl.style.maxWidth = "800px";
+        storyEl.style.margin = "0 auto";
+        storyEl.innerHTML = data.content;
+
+        let closeBtn = document.createElement('button');
+        closeBtn.className = 'zen-btn';
+        closeBtn.style.color = "black";
+        closeBtn.style.borderColor = "black";
+        closeBtn.innerHTML = data.btnClose;
+        closeBtn.onclick = () => exitZenMode();
+        closeBtn.style.marginTop = "30px";
+        closeBtn.style.display = "block";
+        closeBtn.style.marginLeft = "auto";
+        closeBtn.style.marginRight = "auto";
+        
+        storyEl.appendChild(closeBtn);
+        return;
+    }
+
+    if(data.final) {
+        choiceFrame.style.display = 'none';
+        storyFrame.style.boxShadow = "none";
+        
+        storyEl.style.animation = 'none';
+        void storyEl.offsetWidth; 
+        storyEl.style.animation = 'zoomInZen 1s ease-out forwards';
+        storyEl.innerHTML = data.story;
+        storyEl.style.color = "white";
+        
+        let nextBtn = document.createElement('button');
+        nextBtn.className = 'zen-btn'; 
+        nextBtn.innerHTML = data.btnNext;
+        nextBtn.style.marginTop = "30px";
+        nextBtn.onclick = () => renderZenStage(6);
+        
+        storyEl.appendChild(document.createElement('br'));
+        storyEl.appendChild(nextBtn);
+        return;
+    }
+
+    choiceFrame.style.display = 'flex';
+    storyFrame.style.boxShadow = "0 0 20px rgba(255,255,255,0.5)";
+    
+    storyEl.style.animation = 'none';
+    void storyEl.offsetWidth; 
+    storyEl.style.animation = 'zoomInZen 1s ease-out forwards';
+    storyEl.innerHTML = data.story;
+    storyEl.style.color = "white";
+
+    choiceEl.innerHTML = ''; choiceEl.style.color = "black";
+    btnContainer.innerHTML = '';
+    
+    typeWriterEffect(choiceEl, data.q, 30, () => {
+        let b1 = document.createElement('button'); b1.className = 'zen-btn'; b1.innerHTML = data.btn1;
+        b1.onclick = () => showZenResult(data.btn1Res, data.btn1Color, data.btn1End, stageNum);
+        
+        let b2 = document.createElement('button'); b2.className = 'zen-btn'; b2.innerHTML = data.btn2;
+        b2.onclick = () => showZenResult(data.btn2Res, data.btn2Color, data.btn2End, stageNum);
+        
+        btnContainer.appendChild(b1); btnContainer.appendChild(b2);
+    });
+}
+
+function showZenResult(resText, color, isEnd, currentStage) {
+    let data = zenData[zenLang][currentStage];
+    let storyEl = document.getElementById('zen-story-text');
+    let choiceEl = document.getElementById('zen-choice-text');
+    let btnContainer = document.getElementById('zen-buttons');
+    
+    btnContainer.innerHTML = '';
+    clearInterval(zenTypewriterInterval);
+
+    if (color === "white") {
+        storyEl.style.animation = 'none';
+        void storyEl.offsetWidth;
+        storyEl.style.animation = 'zoomInZen 1s ease-out forwards';
+        storyEl.innerHTML = resText;
+        choiceEl.innerHTML = ''; 
+    } else {
+        choiceEl.style.color = "black";
+        typeWriterEffect(choiceEl, resText, 25);
+    }
+
+    let nextBtn = document.createElement('button');
+    nextBtn.className = 'zen-btn';
+    
+    if (isEnd) {
+        nextBtn.innerHTML = zenLang === "th" ? 'กลับสู่เมนูหลัก' : 'Back to Main Menu';
+        nextBtn.onclick = () => exitZenMode();
+        setTimeout(() => btnContainer.appendChild(nextBtn), 1000);
+    } else {
+        nextBtn.innerHTML = zenLang === "th" ? 'ต่อไป' : 'Next';
+        nextBtn.onclick = () => renderZenStage(currentStage + 1);
+        setTimeout(() => btnContainer.appendChild(nextBtn), 1000);
+    }
+}
+
+
+/** * ==========================================
+ * 📂 MODULE 0: LANGUAGE TOGGLE & SELECTION STATE
+ * ==========================================
+ */
+let currentLang = "th";
+const langDict = {
+    th: {
+        title: "คุณชื่ออะไร ?",
+        placeholder: "จิตเดิมแท้",
+        pve: "PVE",
+        timechainHero: "Timechain HERO",
+        pmatcg: "PMATCG",
+        rulesBtn: "📖 กติกา / Rules",
+        galleryBack: "🔙 Back to Menu",
+        detailFriend: "👥 ลองเล่นกับเพื่อน",
+        detailBot: "🤖 ลองเล่นกับSATOSHI",
+        detailBattle: "⚔️ BATTLE!",
+        detailBack: "🔙 ย้อนกลับ",
+        thSubtitle: "ป้อนข้อมูลเพื่อสร้าง Custom Node (ต่อสู้กับบอทแบบเอาชีวิตรอด)",
+        thL1: "1. BTC Block Height (0 - 9999999)",
+        thS1: "(หน่วย=HP, สิบ=ATT, ร้อย=DEF)",
+        thL2: "2. Hash Number (1-3) <small>หาจากหลังมาหน้า เจออะไรก่อนใส่ตัวนั้น (ไม่เจอใส่ 0)</small>",
+        thS2: "(ใช้กำหนดค่า SPD)",
+        thL3: "3. Hash Letter (a-f) <small>หาจากหลังมาหน้า เจออะไรก่อนใส่ตัวนั้น</small>",
+        thS3: "(ใช้กำหนดธาตุประจำตัว)",
+        thL4: "4. เลือกความสามารถ SPoW",
+        thSpowOptions: `
+            <option value="heal">SPoW1(จ่าย PoW1) : heal 1 HP</option>
+            <option value="att">SPoW1(จ่าย PoW1) : +1 ATT</option>
+            <option value="def">SPoW1(จ่าย PoW1) : +1 DEF</option>
+            <option value="spd">SPoW2(จ่าย PoW2) : +1SPD</option>
+            <option value="muted">SPoW2 (จ่าย PoW2) : Target Node become Muted(🔕)(This Node cannot use SPoW. Cleared when Offline.)</option>
+            <option value="overheat">SPoW2 (จ่าย PoW2) : Target Node become Overheat(📛)(This Node cannot use Overclock. Cleared when Offline.)</option>
+            <option value="51att">SPoW3 (จ่าย PoW3) : Target Node become 51%Att(☸️)(Whenever this Node goes Offline, it immediately takes 1 damage. Cleared when Online.)</option>
+            <option value="bug_any">SPoW4 (จ่าย PoW4) : Target Node become Bug (🐞)(Swap this Node's ATT and DEF Cleared when Clear phase)</option>
+            <option value="virus">SPoW5 (จ่าย PoW5) : Target Node become virus (🦠) (สุ่ม 1 สถานะ: 1=Overheat(📛), 2=Muted(🔕), 3=51%Att(☸️), 4=Bug(🐞), 5=Asleep(💤), 6=ไม่มีผล)</option>
+            <option value="asleep">SPoW6 (จ่าย PoW6) Target Node become Asleep(💤) : This Node becomes Offline. Cancel its attack if it is currently attacking. It Wakes Up (removes Offline status) if it takes damage. Cleared when Clear phase.</option>
+        `,
+        thHashNumOptions: `
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="0">0 (ไม่เจอ)</option>
+        `,
+        thHashCharOptions: `
+            <option value="a">a (💧 Liquid (น้ำ))</option>
+            <option value="b">b (🔥 Fire (ไฟ))</option>
+            <option value="c">c (🌳 Terra (ดิน))</option>
+            <option value="d">d (🔆 Awareness (สติ))</option>
+            <option value="e">e (🎃 Ego (ตัวตน))</option>
+            <option value="f">f (👿 Suffering (ทุกขเวทนา))</option>
+        `,
+        thGen: "Generate & Start Battle!",
+        thCancel: "ยกเลิก",
+        rulesTitle: "Protocol",
+        rulesContent: `
+            <div style="text-align:left; max-height: 60vh; overflow-y: auto; padding-right: 10px; font-size: 14px;">
+                <h3 style="color:var(--highlight); margin-top:0;">โหมดการเล่น (Game Modes)</h3>
+                <p><b>PVE:</b> สุ่มการ์ดแข่งกัน ฝ่ายใดทำให้การ์ดฝั่งตรงข้าม HP เหลือ 0 (Shutdown) ได้ 2 ครั้งก่อนจะเป็นผู้ชนะ</p>
+                <p><b>Timechain HERO (Custom):</b> ผู้เล่นสร้างการ์ด (Node) ของตัวเองจากเลข Block เพื่อนำไปสู้กับบอทแบบเอาชีวิตรอด ชนะไปเรื่อยๆ จนกว่าจะตาย (สูงสุด 21,000,000 ด่าน)</p>
+                <p><b>PMATCG:</b> เลือกการ์ดตัวละครที่ต้องการ เพื่อสู้กับเพื่อน (ผลัดกันเล่นบนเครื่องเดียว) หรือสู้กับบอท (SATOSHI) ตัดสินแพ้ชนะในเกมเดียว</p>
+
+                <h3 style="color:var(--highlight);">ค่าสถานะ (Stats) พื้นฐาน</h3>
+                <p>❤️<b>HP:</b> พลังชีวิต หากเหลือ 0 จะถูก Shutdown<br>
+                ⚔️<b>ATT & 🛡️DEF:</b> พลังโจมตีและพลังป้องกัน (หากการ์ดอยู่ในสถานะ Offline ค่า DEF จะลดลงเหลือครึ่งเดียว)<br>
+                🥾<b>SPD:</b> ความเร็ว ใช้ตัดสินลำดับการโจมตี เพิ่มดาเมจ(เมื่อ Dash) และใช้ในการหลบหลีก<br>
+                ⚡<b>PoW (Power):</b> พลังงานที่ใช้ในการออนไลน์และใช้สกิล<br>
+                🪫<b>BPoW (Base Power):</b> เกณฑ์พลังงานขั้นต่ำที่การ์ดต้องการเพื่อเข้าสู่สถานะ 🔋Online</p>
+
+                <h3 style="color:var(--highlight);">ขั้นตอนการเล่นใน 1 เทิร์น (Turn Phases)</h3>
+                <p><b>0. Sync Phase (วัดความเร็ว):</b> นำค่า SPD มาเทียบกัน ฝ่ายที่ SPD สูงกว่าจะได้เป็น "ฝ่ายโจมตี" (Attacker) ก่อน(ได้เล่นphase1-5ต่อเนื่องจนจบก่อน) หากเท่ากันจะสุ่มทอยเต๋าตัดสิน<br>
+                <i>หมายเหตุ: Sync Phase ทำครั้งเดียว/1เกม</i></p>
+                <p><b>1. Phase 1: Roll (ทอยเต๋า):</b> ผู้เล่นทอยลูกเต๋า 6 หน้าจำนวน 3 ลูก เพื่อสะสมเป็นค่า PoW (หากทอยได้เลขเดียวกัน 3 ลูก (Triple) จะได้รับโบนัส +3 SPD)</p>
+                <p><b>2. Phase 2: Overclock (เร่งพลัง):</b> ผู้เล่นสามารถเลือกจ่าย 2 HP เพื่อแลกกับ 2 PoW ได้ (ห้ามใช้หาก HP เหลือ <= 2 หรือติดสถานะ Overheat)</p>
+                <p><b>3. Phase 3: Activate (ออนไลน์ระบบ):</b> เลือกดึงค่าพลังจากลูกเต๋าที่ทอยได้มารวมกับ PoW ที่มี<br>
+                - หากพลังงานรวม >= ค่า BPoW การ์ดจะเข้าสู่สถานะ ONLINE และจ่าย PoW ตามค่า BPoW นั้น<br>
+                - หากพลังงานรวมไม่ถึงค่า BPoW การ์ดจะตกอยู่ในสถานะ OFFLINE</p>
+                <p><b>4. Phase 4: Boost (เสริมพลัง):</b> นำ PoW หรือลูกเต๋าที่ยังไม่ได้ใช้มาบัฟตัวเอง<br>
+                ✨<b>ใช้สกิล (SPoW):</b> จ่ายค่า PoW ตามที่สกิลการ์ดระบุเพื่อเรียกใช้ความสามารถ (ต้องอยู่สถานะ Online)<br>
+                🌈⚔️<b>Dash (ฝ่ายโจมตี):</b> สละลูกเต๋าที่เหลือ 1 ลูก เพื่อนำค่า SPD ไปบวกเพิ่มในค่า ATT<br>
+                ❇️🌈<b>Boost Dodge (ฝ่ายป้องกัน):</b> สละลูกเต๋าที่เหลือ 1 ลูก เพื่อปลดล็อคคำสั่ง 🌈🥾"หลบหลีก (Dodge)"</p>
+                <p><b>5. Phase 5: Command (ออกคำสั่ง):</b><br>
+                - <b>ฝ่ายโจมตี เลือก:</b> โจมตี (ATTACK) หรือ ออฟไลน์ (OFFLINE)<br>
+                - <b>ฝ่ายป้องกัน เลือก:</b> ป้องกัน (DEFEND), หลบหลีก (DODGE - ถ้าปลดล็อคแล้ว) หรือ ออฟไลน์ (OFFLINE)</p>
+
+                <h3 style="color:var(--highlight);">การตัดสินผล (Combat Resolution)</h3>
+                <p><b>หากเลือกป้องกัน (DEFEND):</b> ดาเมจที่ได้รับ = ค่า ATT รวมของฝ่ายโจมตี ลบด้วย ค่า DEF รวมของฝ่ายป้องกัน (ดาเมจขั้นต่ำคือ 1 เสมอ หากค่า ATT > 0)<br>
+                <b>หากเลือกหลบหลีก (DODGE):</b> ทั้งสองฝ่ายทอยเต๋า 1 ลูก + ค่า SPD ของตนเอง<br>
+                - หากฝ่ายโจมตีคะแนนสูงกว่า: ฝ่ายรับจะโดนดาเมจเต็มๆ โดยไม่หักลบ DEF<br>
+                - หากฝ่ายป้องกันคะแนนสูงกว่า: หลบสำเร็จ ดาเมจจะเป็น 0 (Miss)<br>
+                - หากเสมอ: ทอยเต๋าตัดสินใหม่<br>
+                <i>(หลังจบการต่อสู้ จะสลับให้ฝ่ายป้องกันกลายเป็นฝ่ายโจมตีในเทิร์นถัดไป)</i></p>
+
+                <h3 style="color:var(--highlight);">สถานะผิดปกติ (Status Ailments)</h3>
+                <p>🔕 <b>Muted:</b> ไม่สามารถใช้สกิล (SPoW) ได้ (หายไปเมื่อเข้าสู่สถานะ Offline)<br>
+                📛 <b>Overheat:</b> ไม่สามารถใช้ Overclock ได้ (หายไปเมื่อเข้าสู่สถานะ Offline)<br>
+                ☸️ <b>51%Att:</b> เมื่อการ์ดติดสถานะ Offline จะโดนดาเมจ 1 HP ทันที (หายไปเมื่อเข้าสู่สถานะ Online)<br>
+                🐞 <b>Bug:</b> สลับค่า ATT(พื้นฐาน) และ DEF(พื้นฐาน) ของตนเอง (หายไปเมื่อจบเทิร์น)<br>
+                🦠 <b>Virus:</b> สุ่มรับ 1 สถานะผิดปกติ (🔕, 📛, ☸️, 🐞, 💤 หรือไม่มีผล)<br>
+                💤 <b>Asleep:</b> บังคับเป็นสถานะ Offline และยกเลิกการโจมตี การ์ดจะตื่น(หายจากสถานะนี้) เมื่อได้รับดาเมจ หรือ ตื่นเองเมื่อจบเทิร์น</p>
+            </div>
+        `,
+        rulesClose: "ปิด",
+        defaultName: "จิตเดิมแท้",
+        galleryTitleP1: "Select Your Character (Player 1)",
+        galleryTitleP2Friend: "Select Opponent Character (Player 2)",
+        galleryTitleP2Bot: "Select Opponent Character (SATOSHI)",
+        friendName: "Friend"
+    },
+    en: {
+        title: "What is your name?",
+        placeholder: "True Mind",
+        pve: "PVE",
+        timechainHero: "Timechain HERO",
+        pmatcg: "PMATCG",
+        rulesBtn: "📖 Rules",
+        galleryBack: "🔙 Back to Menu",
+        detailFriend: "👥 Play with Friend",
+        detailBot: "🤖 Play with SATOSHI",
+        detailBattle: "⚔️ BATTLE!",
+        detailBack: "🔙 Back",
+        thSubtitle: "Enter data to create a Custom Node (Survival Bot Battle)",
+        thL1: "1. BTC Block Height (0 - 9999999)",
+        thS1: "(Unit=HP, Tens=ATT, Hundreds=DEF)",
+        thL2: "2. Hash Number (1-3) <small>Find from back to front, use first match (0 if none)</small>",
+        thS2: "(Determines SPD)",
+        thL3: "3. Hash Letter (a-f) <small>Find from back to front, use first match</small>",
+        thS3: "(Determines Element)",
+        thL4: "4. Select SPoW Ability",
+        thSpowOptions: `
+            <option value="heal">SPoW1(Pay 1 PoW) : Heal 1 HP</option>
+            <option value="att">SPoW1(Pay 1 PoW) : +1 ATT</option>
+            <option value="def">SPoW1(Pay 1 PoW) : +1 DEF</option>
+            <option value="spd">SPoW2(Pay 2 PoW) : +1 SPD</option>
+            <option value="muted">SPoW2(Pay 2 PoW) : Target Node becomes Muted(🔕)</option>
+            <option value="overheat">SPoW2(Pay 2 PoW) : Target Node becomes Overheat(📛)</option>
+            <option value="51att">SPoW3(Pay 3 PoW) : Target Node becomes 51%Att(☸️)</option>
+            <option value="bug_any">SPoW4(Pay 4 PoW) : Target Node becomes Bug(🐞)</option>
+            <option value="virus">SPoW5(Pay 5 PoW) : Target Node becomes Virus(🦠)</option>
+            <option value="asleep">SPoW6(Pay 6 PoW) : Target Node becomes Asleep(💤)</option>
+        `,
+        thHashNumOptions: `
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="0">0 (Not found)</option>
+        `,
+        thHashCharOptions: `
+            <option value="a">a (💧 Liquid)</option>
+            <option value="b">b (🔥 Fire)</option>
+            <option value="c">c (🌳 Terra)</option>
+            <option value="d">d (🔆 Awareness)</option>
+            <option value="e">e (🎃 Ego)</option>
+            <option value="f">f (👿 Suffering)</option>
+        `,
+        thGen: "Generate & Start Battle!",
+        thCancel: "Cancel",
+        rulesTitle: "Protocol",
+        rulesContent: `
+            <div style="text-align:left; max-height: 60vh; overflow-y: auto; padding-right: 10px; font-size: 14px;">
+                <h3 style="color:var(--highlight); margin-top:0;">Game Modes</h3>
+                <p><b>PVE:</b> Randomly draft cards to battle. The first player to reduce the opponent's HP to 0 (Shutdown) twice wins the match.</p>
+                <p><b>Timechain HERO (Custom):</b> A survival mode where players create their own custom card (Node) using a Block number to battle AI bots. Keep winning and advancing until defeated (Max limit: 21,000,000 stages).</p>
+                <p><b>PMATCG:</b> Select your desired character card to battle a friend (Local Multiplayer/Pass-and-Play) or an AI bot (SATOSHI) in a single-elimination match.</p>
+
+                <h3 style="color:var(--highlight);">Base Stats</h3>
+                <p>❤️<b>HP:</b> Life points. If reduced to 0, the card is Shutdown.<br>
+                ⚔️<b>ATT & 🛡️DEF:</b> Offensive and defensive power (If a card is in the Offline state, its DEF is halved).<br>
+                🥾<b>SPD:</b> Speed. Determines turn order, increases damage (when using Dash), and is used for evading attacks.<br>
+                ⚡<b>PoW (Power):</b> Energy resource required to go Online and activate skills.<br>
+                🪫<b>BPoW (Base Power):</b> The minimum energy threshold required for a card to enter the 🔋Online state.</p>
+
+                <h3 style="color:var(--highlight);">Turn Phases</h3>
+                <p><b>0. Sync Phase (Initiative Check):</b> Compare SPD stats. The player with the higher SPD becomes the "Attacker" first (resolving Phases 1-5 consecutively). If there is a tie, roll a die to decide.<br>
+                <i>Note: The Sync Phase only occurs once per game.</i></p>
+                <p><b>1. Phase 1: Roll:</b> The player rolls three 6-sided dice to generate PoW (If you roll three of the same number (Triple), you get a +3 SPD bonus).</p>
+                <p><b>2. Phase 2: Overclock:</b> The player may choose to pay 2 HP to gain 2 PoW (Cannot be activated if HP is <= 2 or if afflicted with the Overheat status).</p>
+                <p><b>3. Phase 3: Activate:</b> Add the rolled dice values to your current PoW.<br>
+                - If Total PoW is >= BPoW, the card enters the ONLINE state and pays PoW equal to the BPoW cost.<br>
+                - If Total PoW is < BPoW, the card falls into the OFFLINE state.</p>
+                <p><b>4. Phase 4: Boost:</b> Spend remaining PoW or unused dice to buff yourself.<br>
+                ✨<b>Use Skill (SPoW):</b> Pay the required PoW specified on the card to activate its skill (Must be Online).<br>
+                🌈⚔️<b>Dash (Attacker):</b> Sacrifice 1 unused die to add your SPD value to your current ATT.<br>
+                ❇️🌈<b>Boost Dodge (Defender):</b> Sacrifice 1 unused die to unlock the 🌈🥾"Dodge" command.</p>
+                <p><b>5. Phase 5: Command:</b><br>
+                - <b>Attacker chooses:</b> ATTACK or OFFLINE<br>
+                - <b>Defender chooses:</b> DEFEND, DODGE (if unlocked), or OFFLINE</p>
+
+                <h3 style="color:var(--highlight);">Combat Resolution</h3>
+                <p><b>If DEFEND is chosen:</b> Damage taken = Total ATT of the Attacker minus Total DEF of the Defender. (Minimum damage is always 1 if ATT > 0).<br>
+                <b>If DODGE is chosen:</b> Both players roll 1 die + their respective SPD stats.<br>
+                - If the Attacker scores higher: The Defender takes full direct damage (DEF is ignored).<br>
+                - If the Defender scores higher: Successful evasion. Damage is reduced to 0 (Miss).<br>
+                - If tied: Reroll to decide.<br>
+                <i>(After combat resolves, roles swap, and the Defender becomes the Attacker for the next turn).</i></p>
+
+                <h3 style="color:var(--highlight);">Status Ailments</h3>
+                <p>🔕 <b>Muted:</b> Cannot activate skills (SPoW). (Cleansed upon entering the Offline state).<br>
+                📛 <b>Overheat:</b> Cannot use Overclock. (Cleansed upon entering the Offline state).<br>
+                ☸️ <b>51%Att:</b> When the card enters the Offline state, it instantly takes 1 HP damage. (Cleansed upon entering the Online state).<br>
+                🐞 <b>Bug:</b> Swaps your own base ATT and base DEF stats. (Expires at the end of the turn).<br>
+                🦠 <b>Virus:</b> Randomly inflicts 1 status ailment (🔕, 📛, ☸️, 🐞, 💤 or no effect).<br>
+                💤 <b>Asleep:</b> Forces the card into the Offline state and cancels any outgoing attack. The card wakes up (cleansed of this status) upon taking damage, or automatically at the end of the turn.</p>
+            </div>
+        `,
+        rulesClose: "Close",
+        defaultName: "True Mind",
+        galleryTitleP1: "Select Your Character (Player 1)",
+        galleryTitleP2Friend: "Select Opponent Character (Player 2)",
+        galleryTitleP2Bot: "Select Opponent Character (SATOSHI)",
+        friendName: "Friend"
+    }
+};
+
+let pmatcgSelectionStep = 1;
+let pmatcgP1Card = null;
+let pmatcgIsPvP = false;
+let isGeneratingForPMATCG = false;
+let pmatcgTargetButton = null;
+
+window.onload = function() {
+    // 🌸 Initial Boot Splash Screen 🌸
+    setTimeout(() => {
+        const splash = document.getElementById('quote-splash-screen');
+        if (splash) {
+            splash.style.opacity = '0';
+            setTimeout(() => splash.style.display = 'none', 300);
+        }
+    }, 2000);
+
+    // 🌸 ZEN MODE LISTENER 🌸
+    document.getElementById('player-name-input').addEventListener('input', function(e) {
+        if (e.target.value.toLowerCase().includes('zen')) {
+            startZenMode();
+            e.target.value = ''; // clear input
+        }
+    });
+    
+    // Default load TH rules on start
+    document.getElementById('rules-content').innerHTML = langDict[currentLang].rulesContent;
+
+    if (window.innerWidth <= 768) { document.querySelectorAll('.mobile-only').forEach(el => el.style.display = 'inline'); }
+    
+    document.getElementById('play-btn').onclick = () => { 
+        showQuoteSplash("เงินเฟ้อ คือ คดีอาญา", "—Chit", 1000, () => {
+            setupPlayerName(); state.gameMode = "1V1"; document.getElementById('cover-screen').style.display = 'none'; document.getElementById('main-ui').style.display = 'flex'; startGame1V1(); 
+        });
+    };
+    
+    document.getElementById('th-btn').onclick = () => { 
+        showQuoteSplash("Be Your Own HERO", "—BOB", 1000, () => {
+            isGeneratingForPMATCG = false;
+            document.getElementById('th-modal').style.display = 'flex'; 
+        });
+    };
+    
+    document.getElementById('pmatcg-btn').onclick = () => { 
+        showQuoteSplash("หอย หอย หอย", "—Dr.Lates", 1000, () => {
+            pmatcgSelectionStep = 1;
+            document.getElementById('gallery-title').innerText = langDict[currentLang].galleryTitleP1;
+            openPMATCGGallery(); 
+        });
+    };
+    
+    document.getElementById('close-th-btn').onclick = () => { document.getElementById('th-modal').style.display = 'none'; };
+    
+    document.getElementById('generate-th-btn').onclick = () => { 
+        let heightStr = document.getElementById('th-height').value.trim();
+        if (heightStr === "" || heightStr.slice(-1) === "0") {
+            alert(currentLang === "th" ? "ไม่สามารถใช้เลข Block ที่ลงท้ายด้วย 0 ได้ เนื่องจากจะทำให้ HP = 0 (ตายทันทีเมื่อเริ่มเกม) กรุณาใส่เลข Block ที่หลักหน่วยไม่เท่ากับ 0 ครับ" : "Block number ending in 0 is not allowed as it results in HP = 0 (instant death). Please use a block number where the last digit is not 0.");
+            return;
+        }
+        
+        let genCardKey = generateTimechainHeroCard(); 
+        
+        if (isGeneratingForPMATCG) {
+            document.getElementById('th-modal').style.display = 'none';
+            selectedCardForPMATCG = genCardKey;
+            
+            if (pmatcgTargetButton === 'friend') {
+                pmatcgP1Card = selectedCardForPMATCG;
+                pmatcgIsPvP = true;
+                pmatcgSelectionStep = 2;
+                document.getElementById('pmatcg-detail-modal').style.display = 'none';
+                document.getElementById('gallery-title').innerText = langDict[currentLang].galleryTitleP2Friend;
+            } else if (pmatcgTargetButton === 'bot') {
+                pmatcgP1Card = selectedCardForPMATCG;
+                pmatcgIsPvP = false;
+                pmatcgSelectionStep = 2;
+                document.getElementById('pmatcg-detail-modal').style.display = 'none';
+                document.getElementById('gallery-title').innerText = langDict[currentLang].galleryTitleP2Bot;
+            } else if (pmatcgTargetButton === 'battle') {
+                let pmatcgP2Card = selectedCardForPMATCG;
+                setupPlayerName(); state.gameMode = pmatcgIsPvP ? "PMATCG_PVP" : "PMATCG_PVE";
+                document.getElementById('pmatcg-detail-modal').style.display = 'none'; 
+                document.getElementById('pmatcg-gallery-modal').style.display = 'none'; 
+                document.getElementById('main-ui').style.display = 'flex';
+                startPMATCGGame(pmatcgP1Card, pmatcgP2Card, pmatcgIsPvP);
+            }
+            return;
+        }
+
+        setupPlayerName(); state.gameMode = "TH"; state.thRound = 1; document.getElementById('th-modal').style.display = 'none'; document.getElementById('cover-screen').style.display = 'none'; document.getElementById('main-ui').style.display = 'flex'; startTimechainHeroGame(); 
+    };
+    
+    document.getElementById('rules-btn').onclick = () => { document.getElementById('rules-modal').style.display = 'flex'; };
+    document.getElementById('close-rules-btn').onclick = () => { document.getElementById('rules-modal').style.display = 'none'; };
+
+    // PMATCG Game Mode starts
+    document.getElementById('btn-play-friend').onclick = () => {
+        if (selectedCardForPMATCG === "AAAwimori") { 
+            isGeneratingForPMATCG = true;
+            pmatcgTargetButton = 'friend';
+            document.getElementById('th-modal').style.display = 'flex';
+            return; 
+        }
+        pmatcgP1Card = selectedCardForPMATCG;
+        pmatcgIsPvP = true;
+        pmatcgSelectionStep = 2;
+        document.getElementById('pmatcg-detail-modal').style.display = 'none';
+        document.getElementById('gallery-title').innerText = langDict[currentLang].galleryTitleP2Friend;
+    };
+    
+    document.getElementById('btn-play-bot').onclick = () => {
+        if (selectedCardForPMATCG === "AAAwimori") { 
+            isGeneratingForPMATCG = true;
+            pmatcgTargetButton = 'bot';
+            document.getElementById('th-modal').style.display = 'flex';
+            return; 
+        }
+        pmatcgP1Card = selectedCardForPMATCG;
+        pmatcgIsPvP = false;
+        pmatcgSelectionStep = 2;
+        document.getElementById('pmatcg-detail-modal').style.display = 'none';
+        document.getElementById('gallery-title').innerText = langDict[currentLang].galleryTitleP2Bot;
+    };
+
+    document.getElementById('btn-battle').onclick = () => {
+        if (selectedCardForPMATCG === "AAAwimori") { 
+            isGeneratingForPMATCG = true;
+            pmatcgTargetButton = 'battle';
+            document.getElementById('th-modal').style.display = 'flex';
+            return; 
+        }
+        let pmatcgP2Card = selectedCardForPMATCG;
+        setupPlayerName(); state.gameMode = pmatcgIsPvP ? "PMATCG_PVP" : "PMATCG_PVE";
+        document.getElementById('pmatcg-detail-modal').style.display = 'none'; document.getElementById('pmatcg-gallery-modal').style.display = 'none'; document.getElementById('main-ui').style.display = 'flex';
+        startPMATCGGame(pmatcgP1Card, pmatcgP2Card, pmatcgIsPvP);
+    };
+
+    document.getElementById('lang-btn').onclick = () => {
+        currentLang = currentLang === "th" ? "en" : "th";
+        document.getElementById('lang-btn').innerText = currentLang === "th" ? "🇺🇸 EN" : "🇹🇭 TH";
+        
+        let t = langDict[currentLang];
+        
+        // Main Menu
+        document.getElementById('menu-title-text').innerText = t.title;
+        document.getElementById('player-name-input').placeholder = t.placeholder;
+        document.getElementById('play-btn').innerText = t.pve;
+        document.getElementById('th-btn').innerText = t.timechainHero;
+        document.getElementById('pmatcg-btn').innerText = t.pmatcg;
+        document.getElementById('rules-btn').innerText = t.rulesBtn;
+        
+        // Paper TH/EN Toggle
+        let paperTh = document.getElementById('paper-th');
+        let paperEn = document.getElementById('paper-en');
+        if (paperTh && paperEn) {
+            paperTh.style.display = currentLang === "th" ? "block" : "none";
+            paperEn.style.display = currentLang === "en" ? "block" : "none";
+        }
+        
+        // Modals
+        document.getElementById('gallery-back-btn').innerText = t.galleryBack;
+        document.getElementById('btn-play-friend').innerText = t.detailFriend;
+        document.getElementById('btn-play-bot').innerText = t.detailBot;
+        document.getElementById('btn-battle').innerHTML = t.detailBattle;
+        document.getElementById('detail-back-btn').innerText = t.detailBack;
+
+        document.getElementById('th-subtitle').innerText = t.thSubtitle;
+        document.getElementById('th-l1').innerHTML = t.thL1;
+        document.getElementById('th-s1').innerHTML = t.thS1;
+        document.getElementById('th-l2').innerHTML = t.thL2;
+        document.getElementById('th-s2').innerHTML = t.thS2;
+        document.getElementById('th-l3').innerHTML = t.thL3;
+        document.getElementById('th-s3').innerHTML = t.thS3;
+        document.getElementById('th-l4').innerHTML = t.thL4;
+        
+        // Preserve dropdown values
+        let spowVal = document.getElementById('th-spow').value;
+        let hashNumVal = document.getElementById('th-hash-num').value;
+        let hashCharVal = document.getElementById('th-hash-char').value;
+
+        document.getElementById('th-spow').innerHTML = t.thSpowOptions;
+        document.getElementById('th-hash-num').innerHTML = t.thHashNumOptions;
+        document.getElementById('th-hash-char').innerHTML = t.thHashCharOptions;
+
+        document.getElementById('th-spow').value = spowVal;
+        document.getElementById('th-hash-num').value = hashNumVal;
+        document.getElementById('th-hash-char').value = hashCharVal;
+        
+        document.getElementById('generate-th-btn').innerText = t.thGen;
+        document.getElementById('close-th-btn').innerText = t.thCancel;
+
+        document.getElementById('rules-title').innerText = t.rulesTitle;
+        document.getElementById('rules-content').innerHTML = t.rulesContent;
+        document.getElementById('close-rules-btn').innerText = t.rulesClose;
+
+        if (document.getElementById('pmatcg-gallery-modal').style.display === 'flex') {
+            if (pmatcgSelectionStep === 1) {
+                document.getElementById('gallery-title').innerText = t.galleryTitleP1;
+            } else {
+                document.getElementById('gallery-title').innerText = pmatcgIsPvP ? t.galleryTitleP2Friend : t.galleryTitleP2Bot;
+            }
+        }
+    };
+};
+
+function setupPlayerName() {
+    let nameInput = document.getElementById('player-name-input').value.trim();
+    if (nameInput !== "") state.p1.name = nameInput; else state.p1.name = langDict[currentLang].defaultName;
+    document.getElementById('p1-name-display').innerText = state.p1.name;
+}
+
+/** 🛠️ PMATCG Gallery & Preview Logic */
+function openPMATCGGallery() {
+    document.getElementById('cover-screen').style.display = 'none';
+    document.getElementById('pmatcg-gallery-modal').style.display = 'flex';
+    const container = document.getElementById('gallery-container');
+    container.innerHTML = '';
+    
+    // --- ADDED: 000 Card ---
+    let wrapper000 = document.createElement('div');
+    wrapper000.style.display = 'flex';
+    wrapper000.style.flexDirection = 'column';
+    wrapper000.style.alignItems = 'center';
+    wrapper000.style.flexShrink = '0';
+
+    let topText000 = document.createElement('div');
+    topText000.style.color = 'var(--highlight)';
+    topText000.style.fontSize = '14px';
+    topText000.style.fontWeight = 'bold';
+    topText000.style.marginBottom = '8px';
+    topText000.innerText = `000 | PMATCG paper`;
+
+    let img000 = document.createElement('img');
+    img000.src = "000.jpg";
+    img000.className = "gallery-card-img";
+    img000.onclick = () => {
+        document.getElementById('pmatcg-gallery-modal').style.display = 'none';
+        document.getElementById('pmatcg-paper-screen').style.display = 'flex';
+    };
+
+    wrapper000.appendChild(topText000);
+    wrapper000.appendChild(img000);
+    container.appendChild(wrapper000);
+    // --- END 000 Card ---
+
+    let keys = Object.keys(BASE_CARD_DB).sort((a, b) => {
+        if (a === "AAAwimori") return -1;
+        if (b === "AAAwimori") return 1;
+        return a.localeCompare(b);
+    });
+    
+    keys.forEach(key => {
+        let card = BASE_CARD_DB[key];
+        
+        let wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.flexDirection = 'column';
+        wrapper.style.alignItems = 'center';
+        wrapper.style.flexShrink = '0';
+        
+        let topText = document.createElement('div');
+        topText.style.color = 'var(--highlight)';
+        topText.style.fontSize = '14px';
+        topText.style.fontWeight = 'bold';
+        topText.style.marginBottom = '8px';
+        topText.innerText = `${card.codecard || "---"} | BH: ${card.BH || "---"}`;
+        
+        let img = document.createElement('img');
+        img.src = card.img;
+        img.className = "gallery-card-img";
+        img.onclick = () => showCardDetail(key);
+        
+        wrapper.appendChild(topText);
+        wrapper.appendChild(img);
+        container.appendChild(wrapper);
+    });
+}
+
+function showCardDetail(cardId) {
+    selectedCardForPMATCG = cardId;
+    
+    let previewState = createPlayerState("PREVIEW", "Preview");
+    previewState.card = CARD_DB[cardId]; 
+    previewState.maxHp = previewState.card.hp; previewState.currentHp = previewState.card.hp;
+    previewState.att = previewState.card.att; previewState.def = previewState.card.def; previewState.spd = previewState.card.spd; previewState.bpow = previewState.card.bpow;
+    
+    if (pmatcgSelectionStep === 1) {
+        document.getElementById('btn-play-friend').style.display = 'block';
+        document.getElementById('btn-play-bot').style.display = 'block';
+        document.getElementById('btn-battle').style.display = 'none';
+    } else {
+        document.getElementById('btn-play-friend').style.display = 'none';
+        document.getElementById('btn-play-bot').style.display = 'none';
+        document.getElementById('btn-battle').style.display = 'block';
+    }
+
+    document.getElementById('pmatcg-detail-modal').style.display = 'flex';
+    document.getElementById('detail-card-display').innerHTML = generateCardHTML(previewState);
+}
+
+/** 🛠️ Timechain HERO Card Generator */
+function generateTimechainHeroCard() {
+    let heightStr = document.getElementById('th-height').value || "0";
+    heightStr = heightStr.padStart(3, '0');
+    let rawHp = parseInt(heightStr.slice(-1));
+    let rawAtt = parseInt(heightStr.slice(-2, -1));
+    let rawDef = parseInt(heightStr.slice(-3, -2));
+    
+    let hp = rawHp === 0 ? 1 : rawHp; 
+    let att = rawAtt; let def = rawDef;
+    let spd = parseInt(document.getElementById('th-hash-num').value);
+    let elCode = document.getElementById('th-hash-char').value;
+    let spowChoice = document.getElementById('th-spow').value;
+
+    let bpow = Math.round(((hp + att + def) / 2) + spd - 1);
+
+    let cardClass = ""; let classEmoji = "";
+    if (bpow >= 12) { cardClass = "Whale"; classEmoji = "🐳"; }
+    else if (def >= 7 && def > att) { cardClass = "Miner"; classEmoji = "🔋"; }
+    else if (att >= 4 && def >= 4) { cardClass = "BTC Node"; classEmoji = "✴️"; }
+    else if (spd === 3) { cardClass = "Investor"; classEmoji = "💰"; }
+    else if (att >= 5 || att <= 1) { cardClass = "Cypherpunk"; classEmoji = "👾"; }
+    else { cardClass = "HODL"; classEmoji = "🛡️"; }
+
+    let spowCost = 2; 
+    let spowDescStr = "";
+    
+    if(spowChoice === "heal") { spowCost = 1; spowDescStr = "Heals 1 HP"; }
+    else if(spowChoice === "att") { spowCost = 1; spowDescStr = "+1 ATT (Temporary)"; }
+    else if(spowChoice === "def") { spowCost = 1; spowDescStr = "+1 DEF (Temporary)"; }
+    else if(spowChoice === "spd") { spowCost = 2; spowDescStr = "+1 SPD (Temporary)"; }
+    else if(spowChoice === "muted") { spowCost = 2; spowDescStr = "Target becomes Muted (🔕)"; }
+    else if(spowChoice === "overheat") { spowCost = 2; spowDescStr = "Target becomes Overheat (📛)"; }
+    else if(spowChoice === "51att") { spowCost = 3; spowDescStr = "Target becomes 51%Att (☸️)"; }
+    else if(spowChoice === "bug_any") { spowCost = 4; spowDescStr = "Target becomes Bug (🐞)"; }
+    else if(spowChoice === "virus") { spowCost = 5; spowDescStr = "Target becomes Virus (🦠) & random status"; }
+    else if(spowChoice === "asleep") { spowCost = 6; spowDescStr = "Target becomes Asleep (💤)"; }
+
+    let customCard = {
+        id: "TH_CUSTOM", name: `${classEmoji}${ELEMENT_MAP[elCode].emoji} Custom Node`,
+        codecard: "AAA", BH: document.getElementById('th-height').value || "0",
+        className: cardClass, hp: hp, att: att, def: def, spd: spd, bpow: bpow,
+        color: ELEMENT_MAP[elCode].color, spowCost: spowCost,
+        spowName: `🌈 💖Stay Humble`, spowOnlyAttack: false,
+        spowDesc: spowDescStr, customSpowType: spowChoice,
+        passiveDesc: "", img: "AAAwimori.jpg" 
+    };
+
+    if (isGeneratingForPMATCG) {
+        let newId = "TH_CUSTOM_" + Date.now();
+        customCard.id = "TH_CUSTOM"; 
+        CARD_DB[newId] = customCard;
+        return newId;
+    } else {
+        CARD_DB["TH_CUSTOM"] = customCard;
+        return "TH_CUSTOM";
+    }
+}
+
+/** * ==========================================
+ * 📂 MODULE 1: CARD DATABASE & POOL
+ * ==========================================
+ */
+const ELEMENT_MAP = {
+    'a': { emoji: '💧', color: '#00aaff', name: "Liquid (น้ำ)" }, 
+    'b': { emoji: '🔥', color: '#ff3333', name: "Fire (ไฟ)" }, 
+    'c': { emoji: '🌳', color: '#33cc33', name: "Terra (ดิน)" }, 
+    'd': { emoji: '🔆', color: '#ffcc00', name: "Awareness (สติ)" }, 
+    'e': { emoji: '🎃', color: '#ff8800', name: "Ego (ตัวตน)" }, 
+    'f': { emoji: '👿', color: '#aa33ff', name: "Suffering (ทุกขเวทนา)" }  
+};
+
+const BASE_CARD_DB = {
+    "AAAwimori": { id: "AAAwimori", codecard: "AAA", BH: "801634", baseName: "Custom Node", hp: "?", att: "?", def: "?", spd: "?", element: 'a', spowCost: "?", spowName: "???", spowOnlyAttack: false, spowDesc: "สร้างสเตตัสและสกิลของตนเองผ่านโหมด Timechain HERO", passiveDesc: "", img: "AAAwimori.jpg" },
+    "00Awim": { id: "00Awim", codecard: "00A", BH: "939999", baseName: "WIM?, Splatter", hp: 9, att: 9, def: 9, spd: 3, element: 'a', spowCost: 2, spowName: "💸⁉️What Is Money?", spowOnlyAttack: false, spowDesc: "If target dodges, it rolls 2 dice and takes the lower.", passiveDesc: "Roll Phase: Pay X HP, +X PoW", img: "00Awim.jpg" },
+    "00Bchit": { id: "00Bchit", codecard: "00B", BH: "944828", baseName: "CHIT, CraftBeernardo", hp: 8, att: 2, def: 8, spd: 1, element: 'e', spowCost: 1, spowName: "🔔🍺Cheers!!", spowOnlyAttack: true, spowDesc: "Pay 2 HP: +4 ATT", passiveDesc: "", img: "00Bchit.jpg" },
+    "00Cpiranya": { id: "00Cpiranya", codecard: "00C", BH: "945664", baseName: "PIRANYA, Donutello", hp: 4, att: 6, def: 6, spd: 2, element: 'c', spowCost: 3, spowName: "🎤💤CDC Bitcoin Talk", spowOnlyAttack: true, spowDesc: "(Attacker) Target becomes Asleep.", passiveDesc: "", img: "00Cpiranya.jpg" },
+    "00Dmm": { id: "00Dmm", codecard: "00D", BH: "947173", baseName: "MM, MAY O’Neil", hp: 3, att: 7, def: 1, spd: 3, element: 'b', spowCost: 2, spowName: "💖🎶Pink Tempo Remedy", spowOnlyAttack: false, spowDesc: "+1 SPD and heals 1 HP.", passiveDesc: "", img: "00Dmm.jpg" },
+    "00Esmartcoin": { id: "00Esmartcoin", codecard: "00E", BH: "949068", baseName: "SMART COIN, Savephael", hp: 8, att: 6, def: 0, spd: 2, element: 'd', spowCost: 2, spowName: "🤪💓Saow", spowOnlyAttack: true, spowDesc: "(Attacker) Target SPD becomes 0.", passiveDesc: "", img: "00Esmartcoin.jpg" },
+    "00Fpma": { id: "00Fpma", codecard: "00F", BH: "949337", baseName: "PMA, Machelangelo", hp: 7, att: 3, def: 3, spd: 2, element: 'b', spowCost: 2, spowName: "💕🫂hello my friend", spowOnlyAttack: false, spowDesc: "+2 SPD", passiveDesc: "", img: "00Fpma.jpg" }
+};
+
+const CARD_DB = {};
+function initCardDB() {
+    for (let key in BASE_CARD_DB) {
+        let c = BASE_CARD_DB[key];
+        let bpow = "?";
+        let cardClass = "Custom"; let classEmoji = "🛠️";
+        
+        if (c.hp !== "?") {
+            bpow = Math.round(((c.hp + c.att + c.def) / 2) + c.spd - 1);
+            if (bpow >= 12) { cardClass = "Whale"; classEmoji = "🐳"; }
+            else if (c.def >= 7 && c.def > c.att) { cardClass = "Miner"; classEmoji = "🔋"; }
+            else if (c.att >= 4 && c.def >= 4) { cardClass = "BTC Node"; classEmoji = "✴️"; }
+            else if (c.spd === 3) { cardClass = "Investor"; classEmoji = "💰"; }
+            else if (c.att >= 5 || c.att <= 1) { cardClass = "Cypherpunk"; classEmoji = "👾"; }
+            else { cardClass = "HODL"; classEmoji = "🛡️"; }
+        }
+
+        let el = ELEMENT_MAP[c.element];
+        CARD_DB[key] = {
+            id: c.id, codecard: c.codecard, BH: c.BH, name: `${classEmoji}${el.emoji} ${c.baseName}`, className: cardClass, 
+            hp: c.hp, att: c.att, def: c.def, spd: c.spd, bpow: bpow, color: el.color, 
+            spowCost: c.spowCost, spowName: c.spowName, spowOnlyAttack: c.spowOnlyAttack, 
+            spowDesc: c.spowDesc, passiveDesc: c.passiveDesc, img: c.img
+        };
+    }
+}
+initCardDB();
+
+function getCardPool() {
+    return Object.keys(BASE_CARD_DB).filter(k => k !== "AAAwimori");
+}
+
+let activeCardPool = [];
+let _aiTimeout = null;
+let selectedCardForPMATCG = null;
+
+/** * ==========================================
+ * 📂 MODULE 2: GAME STATE & DEBUFF MECHANICS
+ * ==========================================
+ */
+const state = {
+    gameMode: "1V1", thRound: 1, 
+    phase: "SETUP", subPhase: "", attacker: null, defender: null,
+    p1: createPlayerState("P1", "จิตเดิมแท้"), p2: createPlayerState("P2", "SATOSHI")
+};
+
+function createPlayerState(id, name) {
+    return {
+        id: id, name: name, points: 0, card: null, maxHp: 0, currentHp: 0, 
+        att: 0, def: 0, spd: 0, bpow: 0, pow: 0, dice: [], 
+        isOnline: false, isOffline: false, 
+        isAsleep: false, isBug: false, isMuted: false, isOverheat: false, is51Att: false, isVirus: false,
+        showDebuffText: false, 
+        tempSpd: 0, tempAtt: 0, tempDef: 0, 
+        canDodge: false, hasDashed: false, hasUsedSpow: false, hasUsedPassive: false, 
+        spow00Awim_active: false, command: null, usedCards: [],
+        isMissed: false, damageTaken: null, isTriple: false
+    };
+}
+
+function goOffline(p) {
+    if (!p.isOffline && p.is51Att) {
+        p.currentHp -= 1;
+        log(`☸️ ${p.name} takes 1 DMG from 51%Att (went Offline).`, 'system');
+    }
+    p.isOnline = false; p.isOffline = true;
+    p.isMuted = false; p.isOverheat = false;
+}
+
+function goOnline(p) {
+    p.isOnline = true; p.isOffline = false;
+    p.is51Att = false;
+}
+
+function getBaseAtt(p) { return p.att + p.tempAtt; }
+function getBaseDef(p) { return p.def + p.tempDef; }
+
+function getTotalAtt(p) { 
+    if(p.att === "?") return "?"; 
+    let baseAtt = p.isBug ? getBaseDef(p) : getBaseAtt(p);
+    if(p.hasDashed) {
+        let currentSpd = (p.spd + p.tempSpd) < 0 ? 0 : (p.spd + p.tempSpd);
+        baseAtt += currentSpd;
+    }
+    return baseAtt; 
+}
+function getTotalDef(p) {
+    if(p.def === "?") return "?";
+    let baseDef = p.isBug ? getBaseAtt(p) : getBaseDef(p);
+    return p.isOffline ? Math.ceil(baseDef / 2) : baseDef;
+}
+
+function rollD6() { return Math.floor(Math.random() * 6) + 1; }
+function consumeOneDie(player) { let d = player.dice.find(x => !x.used); if(d) d.used = true; }
+function canUseSpow(player) {
+    if(player.isMuted) return false;
+    if(player.pow < player.card.spowCost || player.hasUsedSpow) return false;
+    if(player.card.spowOnlyAttack && state.currentMode !== "ATTACK") return false;
+    if(player.card.id === "00Bchit" && player.currentHp <= 2) return false; 
+    return true;
+}
+
+/** * ==========================================
+ * 📂 BOT AI ENGINE
+ * ==========================================
+ */
+const AIEngine = {
+    applyPrimaryRules: function(p, opp, isAttacker, sortedDice) {
+        let decision = { acted: false, command: null };
+        let oppTotalAtt = getTotalAtt(opp);
+        if (state.subPhase === "COMMAND") {
+            if (isAttacker) {
+                if (p.isOnline && !p.isAsleep) decision.command = "ATTACK";
+                else decision.command = "OFFLINE";
+                decision.acted = true;
+            } else { 
+                if (p.isOnline && !p.isAsleep) {
+                    if (oppTotalAtt <= getTotalDef(p) || oppTotalAtt <= 0) { decision.command = "DEFEND"; } 
+                    else if ((oppTotalAtt - getTotalDef(p)) >= p.currentHp && p.canDodge) { decision.command = "DODGE"; } 
+                    else { decision.command = "DEFEND"; }
+                } else { decision.command = "OFFLINE"; }
+                decision.acted = true;
+            }
+        }
+        return decision;
+    },
+    applySecondaryRules: function(p, opp, isAttacker, sum3) {
+        let ruleResult = { skipStandardSpow: false, overclockDone: false, forceActivateAll: false };
+        if (p.card.spowOnlyAttack && !isAttacker) ruleResult.skipStandardSpow = true;
+        if (p.card.id === "00Awim") {
+            let X = p.bpow - sum3;
+            if (state.subPhase === "OVERCLOCK" && !p.isOverheat) {
+                if (sum3 >= 16) ruleResult.overclockDone = true;
+                else if (X >= 1 && X <= 8) {
+                    let myTotalAtt = getTotalAtt(p);
+                    if (isAttacker && ((myTotalAtt - getTotalDef(opp)) >= opp.currentHp) && p.currentHp > (X + 2)) {
+                        p.currentHp -= (X + 2); p.pow += (X + 2); p.hasUsedPassive = true; ruleResult.overclockDone = true;
+                    } else if (X === 1 || X === 2) {
+                        if (p.currentHp > X) { p.currentHp -= X; p.pow += X; p.hasUsedPassive = true; ruleResult.overclockDone = true; }
+                    } else if (!isAttacker && getTotalAtt(opp) <= 6) { ruleResult.overclockDone = true; }
+                }
+            }
+            if (state.subPhase === "ACTIVATE" && sum3 >= 16) ruleResult.forceActivateAll = true;
+        }
+        if (p.card.id === "00Bchit" && isAttacker && ((getTotalAtt(p) + 4 - getTotalDef(opp)) < 4)) ruleResult.skipStandardSpow = true;
+        if (p.card.id === "00Esmartcoin") {
+            if (isAttacker) {
+                if (getTotalDef(opp) >= (getTotalAtt(p) - 1)) { ruleResult.skipStandardSpow = true; if (state.subPhase === "OVERCLOCK" && !p.isOverheat) ruleResult.overclockDone = true; }
+            } else { 
+                let oppSpd = (opp.spd + opp.tempSpd) < 0 ? 0 : (opp.spd + opp.tempSpd);
+                if (opp.isOnline && oppSpd < 4) { ruleResult.skipStandardSpow = true; if (state.subPhase === "OVERCLOCK" && !p.isOverheat) ruleResult.overclockDone = true; }
+            }
+        }
+        return ruleResult;
+    },
+    applyOptionalRules: function(p, opp, isAttacker, sortedDice) {
+        let unspentDice = p.dice.filter(d => !d.used);
+        let oppTotalAtt = getTotalAtt(opp);
+        if (state.subPhase === "OVERCLOCK" && p.currentHp > 2 && p.card.id !== "00Awim" && !p.isOverheat) {
+            let sum3 = p.dice.reduce((s, d) => s + d.val, 0); let sum2 = (sortedDice[0]?.val || 0) + (sortedDice[1]?.val || 0);
+            if (!(!isAttacker && opp.isOffline) && ((p.bpow - sum3) === 1 || (p.bpow - sum3) === 2 || (p.bpow - sum2) === 1 || (p.bpow - sum2) === 2)) {
+                p.currentHp -= 2; p.pow += 2; return true;
+            }
+        }
+        if (state.subPhase === "BOOST" && p.isOnline && unspentDice.length > 0) {
+            if (p.card.id === "00Esmartcoin" && !isAttacker && !p.canDodge && opp.isOnline) { unspentDice[0].used = true; p.canDodge = true; return "DODGED"; }
+            if (isAttacker && !p.hasDashed) { unspentDice[0].used = true; p.hasDashed = true; return "DASHED"; }
+            if (!isAttacker && !p.canDodge) {
+                if ((oppTotalAtt - getTotalDef(p)) > Math.ceil(p.maxHp / 2) || (oppTotalAtt - getTotalDef(p)) >= p.currentHp) {
+                    unspentDice[0].used = true; p.canDodge = true; return "DODGED";
+                }
+            }
+        }
+        return false;
+    },
+    processTurn: function() {
+        if (!state.activePlayer || state.activePlayer.id !== "P2") return;
+        let p = state.p2; let opp = state.p1; let isAttacker = (state.currentMode === "ATTACK");
+        if(state.subPhase === "ROLL") { executeRoll(p); return; }
+        
+        let sortedDice = [...p.dice].sort((a,b) => b.val - a.val); let sum3 = p.dice.reduce((s, d) => s + d.val, 0); let dLow = sortedDice[2] || {val:0};
+        let sec = this.applySecondaryRules(p, opp, isAttacker, sum3);
+
+        if(state.subPhase === "OVERCLOCK") {
+            let handled = sec.overclockDone; if (!handled) handled = this.applyOptionalRules(p, opp, isAttacker, sortedDice); 
+            startActivatePhase(p); return;
+        }
+
+        if(state.subPhase === "ACTIVATE") {
+            if (sec.forceActivateAll) { p.dice.forEach(d => d.selected = true); confirmActivate(p, sum3); return; }
+            if(sortedDice[0]) sortedDice[0].selected = true; if(sortedDice[1]) sortedDice[1].selected = true;
+            let currentPow = (sortedDice[0]?.val || 0) + (sortedDice[1]?.val || 0) + p.pow;
+
+            if (currentPow < p.bpow && (p.bpow - currentPow) <= dLow.val) { dLow.selected = true; currentPow += dLow.val; }
+            if (currentPow >= p.bpow && !dLow.selected && ((currentPow - p.bpow) < p.card.spowCost) && ((currentPow - p.bpow + dLow.val) >= p.card.spowCost) && !sec.skipStandardSpow) {
+                dLow.selected = true; currentPow += dLow.val; 
+            }
+            if (currentPow < p.bpow) { dLow.selected = true; currentPow += dLow.val; } 
+            confirmActivate(p, p.dice.filter(d => d.selected).reduce((s,d)=>s+d.val, 0)); return;
+        }
+
+        if(state.subPhase === "BOOST") {
+            if (p.card.id === "00Dmm") {
+                let unspent = p.dice.filter(d => !d.used);
+                if (isAttacker && !p.hasDashed && unspent.length > 0) { unspent[0].used = true; p.hasDashed = true; startBoostPhase(p); return; }
+                if (!isAttacker && !p.canDodge && getTotalAtt(opp) >= 3 && unspent.length > 0) { unspent[0].used = true; p.canDodge = true; startBoostPhase(p); return; }
+            }
+            if(p.isOnline && canUseSpow(p) && !sec.skipStandardSpow) { executeSPoW(p); return; }
+            let optResult = this.applyOptionalRules(p, opp, isAttacker, sortedDice); 
+            if (optResult === "DASHED" || optResult === "DODGED") { startBoostPhase(p); return; }
+            startCommandPhase(p); return;
+        }
+
+        if(state.subPhase === "COMMAND") {
+            let primaryDecision = this.applyPrimaryRules(p, opp, isAttacker, sortedDice); 
+            if(primaryDecision.acted) commitCommand(p, primaryDecision.command);
+        }
+    }
+};
+
+/** * ==========================================
+ * 📂 GAME CORE
+ * ==========================================
+ */
+function drawCardFromPool() {
+    if (activeCardPool.length === 0) { activeCardPool = getCardPool(); log(`♻️ Refilling pool...`, 'system'); }
+    let idx = Math.floor(Math.random() * activeCardPool.length);
+    return activeCardPool.splice(idx, 1)[0];
+}
+
+function startGame1V1() {
+    log("=== INIT PVE PROTOCOL ===");
+    activeCardPool = getCardPool();
+    state.p1.usedCards = []; state.p2.usedCards = [];
+    state.p1.points = 0; state.p2.points = 0;
+    document.getElementById('p2-name-display').innerText = "SATOSHI";
+    document.getElementById('p1-points').innerText = "0/2 Pts";
+    document.getElementById('p2-points').innerText = "0/2 Pts";
+    loadCard("p1", drawCardFromPool()); loadCard("p2", drawCardFromPool());
+    syncPhase();
+}
+
+function startTimechainHeroGame() {
+    log("=== INIT TIMECHAIN HERO PROTOCOL ===");
+    activeCardPool = getCardPool();
+    state.p1.usedCards = []; state.p2.usedCards = [];
+    document.getElementById('p2-name-display').innerText = "SATOSHI";
+    document.getElementById('p1-points').innerText = `Timechain HERO`;
+    document.getElementById('p2-points').innerText = `Round 1/21M`;
+    loadCard("p1", "TH_CUSTOM"); loadCard("p2", drawCardFromPool());
+    syncPhase();
+}
+
+function startPMATCGGame(playerCardId, opponentCardId, isPvP) {
+    log(`=== INIT PMATCG PROTOCOL (${isPvP ? 'PvP' : 'PvE'}) ===`);
+    activeCardPool = getCardPool();
+    state.p1.usedCards = []; state.p2.usedCards = [];
+    state.p1.points = 0; state.p2.points = 0;
+    
+    document.getElementById('p1-points').innerText = `1 Match`;
+    
+    if (isPvP) {
+        state.p2.name = langDict[currentLang].friendName;
+    } else {
+        state.p2.name = "SATOSHI";
+    }
+    document.getElementById('p2-name-display').innerText = state.p2.name;
+    document.getElementById('p2-points').innerText = `1 Match`;
+    
+    loadCard("p1", playerCardId); 
+    loadCard("p2", opponentCardId); 
+    
+    syncPhase();
+}
+
+function loadCard(pId, cardId) {
+    const c = CARD_DB[cardId]; const p = state[pId];
+    p.card = c; p.maxHp = c.hp; p.currentHp = c.hp;
+    p.att = c.att; p.def = c.def; p.spd = c.spd; p.bpow = c.bpow;
+    p.usedCards.push(c);
+    p.isAsleep = false; p.isBug = false; p.isMuted = false; p.isOverheat = false; p.is51Att = false; p.isVirus = false; p.showDebuffText = false;
+    log(`${p.name} loaded Node: ${c.name}`, p.id.toLowerCase());
+}
+
+function syncPhase() {
+    state.phase = "SYNC"; log("=== SYNC PHASE ===");
+    let spdP1 = state.p1.spd; let spdP2 = state.p2.spd;
+    if(spdP1 > spdP2) { state.attacker = state.p1; state.defender = state.p2; }
+    else if(spdP2 > spdP1) { state.attacker = state.p2; state.defender = state.p1; }
+    else {
+        if(rollD6() >= rollD6()) { state.attacker = state.p1; state.defender = state.p2; }
+        else { state.attacker = state.p2; state.defender = state.p1; }
+    }
+    log(`>> ${state.attacker.name} is the ATTACKER.`, state.attacker.id.toLowerCase());
+    startTurnPhase(state.attacker, "ATTACK");
+}
+
+function startTurnPhase(player, mode) {
+    state.phase = "TURN"; state.activePlayer = player; state.subPhase = "ROLL"; state.currentMode = mode;
+    state.p1.isMissed = false; state.p1.damageTaken = null; state.p2.isMissed = false; state.p2.damageTaken = null;
+    player.dice = []; player.pow = 0;
+    player.canDodge = false; player.hasDashed = false; player.command = null;
+    player.hasUsedSpow = false; player.hasUsedPassive = false; player.spow00Awim_active = false; player.isTriple = false;
+
+    if(player.isAsleep) {
+        log(`${player.name} is ASLEEP (Offline).`); 
+        goOffline(player);
+        startCommandPhase(player); return;
+    }
+    setAction(`Phase 1: Dice Roll (${player.name} - ${mode})`, `Roll 3 D6 dice to generate power.`, [ { label: "Roll Dice", primary: true, action: () => executeRoll(player) } ]);
+}
+
+function executeRoll(player) {
+    let d = [rollD6(), rollD6(), rollD6()];
+    player.dice = d.map(v => ({ val: v, used: false, selected: false }));
+    log(`${player.name} rolled: ${d.join(", ")}`, player.id.toLowerCase());
+    if(d[0] === d[1] && d[1] === d[2]) { player.tempSpd += 3; player.isTriple = true; log(`🎉 TRIPLE! ${player.name} +3 SPD.`); } 
+    else { player.isTriple = false; }
+    showRollOptions(player);
+}
+
+window._awimMaxHp = 0; window._awimCurrentPay = 1;
+window._changeAwimHp = function(delta) {
+    let span = document.getElementById('awim-val'); if(!span) return;
+    let next = parseInt(span.innerText) + delta;
+    if(next >= 1 && next <= window._awimMaxHp) { span.innerText = next; window._awimCurrentPay = next; }
+};
+
+function showRollOptions(player) {
+    if (player.card.id === "00Awim") {
+        if (player.currentHp <= 1) {
+            startActivatePhase(player);
+            return;
+        }
+    } else {
+        if (player.currentHp <= 2) {
+            startActivatePhase(player);
+            return;
+        }
+    }
+
+    let buttons = [];
+    if(player.card.id === "00Awim") {
+        buttons.push({ label: "Use Passive (Pay HP)", action: () => {
+            window._awimMaxHp = player.currentHp - 1; window._awimCurrentPay = 1;
+            setAction(`🐳 00Awim Passive`, `
+                <div style="text-align:center; padding: 10px;">
+                    <p style="margin-bottom:15px; color:#ddd;">Select HP to pay (Max ${window._awimMaxHp}):</p>
+                    <div class="number-stepper">
+                        <button class="stepper-btn" onclick="window._changeAwimHp(-1)">-</button><span id="awim-val" class="stepper-val">1</span><button class="stepper-btn" onclick="window._changeAwimHp(1)">+</button>
+                    </div>
+                </div>`, [
+                { label: "Confirm Payment", primary: true, action: () => {
+                    player.currentHp -= window._awimCurrentPay; player.pow += window._awimCurrentPay; player.hasUsedPassive = true; 
+                    log(`🐳 ${player.name} paid ${window._awimCurrentPay} HP for PoW.`, player.id.toLowerCase()); startActivatePhase(player);
+                }}, { label: "Cancel", action: () => showRollOptions(player) }
+            ]);
+        }});
+    } else {
+        if(!player.isOverheat) {
+            buttons.push({ label: "Overclock (-2 HP, +2 PoW)", action: () => {
+                if(player.currentHp > 2) { player.currentHp -= 2; player.pow += 2; log(`🔥 ${player.name} Overclocked!`, player.id.toLowerCase()); startActivatePhase(player); } 
+            }});
+        } else {
+            buttons.push({ label: "Overclock (Disabled: 📛 Overheat)", disabled: true, action: () => {} });
+        }
+    }
+    buttons.push({ label: "Skip", action: () => startActivatePhase(player) });
+    state.subPhase = "OVERCLOCK"; setAction(`Phase 2: Overclock (${player.name})`, `Sacrifice HP to gain initial PoW?`, buttons);
+}
+
+function startActivatePhase(player) { state.subPhase = "ACTIVATE"; updateActivateUI(); }
+function confirmActivate(player, generatedPow) {
+    player.dice.forEach(d => { if(d.selected) d.used = true; }); player.pow += generatedPow;
+    if(player.pow >= player.bpow) { 
+        goOnline(player); player.pow -= player.bpow; 
+        log(`🌐 ${player.name} is ONLINE!`, player.id.toLowerCase()); 
+    } else { 
+        goOffline(player); 
+        log(`🚫 ${player.name} is OFFLINE.`, player.id.toLowerCase()); 
+    }
+    startBoostPhase(player);
+}
+
+function startBoostPhase(player) {
+    state.subPhase = "BOOST"; let unspent = player.dice.filter(d=>!d.used).length; let buttons = [];
+    if(player.isOnline) {
+        if(canUseSpow(player)) { buttons.push({ label: `✨ Use SPoW (-${player.card.spowCost} PoW)`, action: () => executeSPoW(player) }); }
+        if(unspent > 0) {
+            if(state.currentMode === "ATTACK" && !player.hasDashed) {
+                buttons.push({ label: "🌈⚔️ Dash (Sacrifice 1 Die)", action: () => { consumeOneDie(player); player.hasDashed = true; log(`💨 DASH!`, player.id.toLowerCase()); startBoostPhase(player); }});
+            } else if (state.currentMode === "DEFEND" && !player.canDodge) {
+                buttons.push({ label: "❇️🌈 Boost Dodge (Sacrifice 1 Die)", action: () => { consumeOneDie(player); player.canDodge = true; log(`💨 DODGE unlocked!`, player.id.toLowerCase()); startBoostPhase(player); }});
+            }
+        }
+    }
+    buttons.push({ label: "Next / End Boost", primary: true, action: () => startCommandPhase(player) });
+    setAction(`Phase 4: Boost (${player.name})`, `Spend remaining PoW on Skills or Dice on Stances.`, buttons);
+}
+
+function executeSPoW(player) {
+    player.pow -= player.card.spowCost; player.hasUsedSpow = true; let target = player === state.p1 ? state.p2 : state.p1;
+    
+    if (player.card.id === "TH_CUSTOM" && player.card.customSpowType === "bug_any") {
+        if (player.id === "P2" && state.gameMode !== "PMATCG_PVP") {
+            target.isBug = true;
+            log(`✨ ${player.name} used SPoW (Bug)!`, player.id.toLowerCase());
+            startBoostPhase(player);
+        } else {
+            setAction(`🐞 Select Target`, `เลือกว่าจะให้ใครติดสถานะ Bug (สลับ ATT/DEF)`, [
+                { label: `เป้าหมาย: ${target.name} (คู่แข่ง)`, primary: true, action: () => {
+                    target.isBug = true;
+                    log(`✨ ${player.name} used SPoW on ${target.name}!`, player.id.toLowerCase());
+                    startBoostPhase(player);
+                }},
+                { label: `เป้าหมาย: ${player.name} (ตัวเอง)`, action: () => {
+                    player.isBug = true;
+                    log(`✨ ${player.name} used SPoW on THEMSELVES!`, player.id.toLowerCase());
+                    startBoostPhase(player);
+                }}
+            ]);
+        }
+        return; 
+    }
+
+    switch(player.card.id) {
+        case "00Awim": player.spow00Awim_active = true; break;
+        case "00Bchit": player.currentHp -= 2; player.tempAtt += 4; break;
+        case "00Cpiranya": 
+            target.isAsleep = true; goOffline(target); 
+            if(target.command === "ATTACK") target.command = null; 
+            break;
+        case "00Dmm": player.tempSpd += 1; if(player.currentHp < player.maxHp) player.currentHp += 1; break;
+        case "00Esmartcoin": target.tempSpd = -(target.spd); break;
+        case "00Fpma": player.tempSpd += 2; break;
+        case "TH_CUSTOM":
+            if(player.card.customSpowType === "heal") { if(player.currentHp < player.maxHp) player.currentHp += 1; }
+            else if(player.card.customSpowType === "att") player.tempAtt += 1;
+            else if(player.card.customSpowType === "def") player.tempDef += 1; 
+            else if(player.card.customSpowType === "spd") player.tempSpd += 1;
+            else if(player.card.customSpowType === "muted") target.isMuted = true;
+            else if(player.card.customSpowType === "overheat") target.isOverheat = true;
+            else if(player.card.customSpowType === "51att") target.is51Att = true;
+            else if(player.card.customSpowType === "virus") {
+                target.isVirus = true;
+                let vRoll = rollD6();
+                log(`🦠 ${player.name} used Virus! ${target.name} rolled: ${vRoll}`, player.id.toLowerCase());
+                if(vRoll === 1) target.isOverheat = true;
+                else if(vRoll === 2) target.isMuted = true;
+                else if(vRoll === 3) target.is51Att = true;
+                else if(vRoll === 4) target.isBug = true;
+                else if(vRoll === 5) { target.isAsleep = true; goOffline(target); if(target.command === "ATTACK") target.command = null; }
+                target.isVirus = false; 
+            }
+            else if(player.card.customSpowType === "asleep") { target.isAsleep = true; goOffline(target); if(target.command === "ATTACK") target.command = null; }
+            break;
+    }
+    log(`✨ ${player.name} used SPoW!`, player.id.toLowerCase()); startBoostPhase(player); 
+}
+
+function startCommandPhase(player) {
+    state.subPhase = "COMMAND"; let buttons = [];
+    if(state.currentMode === "ATTACK") {
+        if(player.isOnline && !player.isAsleep) buttons.push({ label: `⚔️ Command: ATTACK (Total ATT: ${getTotalAtt(player)})`, primary: true, action: () => commitCommand(player, "ATTACK") });
+        buttons.push({ label: "🔴 Command: OFFLINE", action: () => commitCommand(player, "OFFLINE") });
+    } else { 
+        if(player.isOnline && !player.isAsleep) {
+            buttons.push({ label: "🛡️ Command: DEFEND", primary: true, action: () => commitCommand(player, "DEFEND") });
+            if(player.canDodge) buttons.push({ label: "🌈🥾 Command: DODGE", action: () => commitCommand(player, "DODGE") });
+        }
+        buttons.push({ label: "🔴 Command: OFFLINE (Take hit)", action: () => commitCommand(player, "OFFLINE") });
+    }
+    setAction(`Phase 5: Command (${player.name})`, `Issue your final order.`, buttons);
+}
+
+function commitCommand(player, cmd) {
+    player.command = cmd; if (cmd === "OFFLINE") { goOffline(player); }
+    log(`>> ${player.name} commands: <b>${cmd}</b>`, player.id.toLowerCase());
+    updateUI(); 
+    if(state.currentMode === "ATTACK") startTurnPhase(state.defender, "DEFEND"); else processSettlePhase();
+}
+
+/** 🛠️ COMBAT RESOLUTION */
+function processSettlePhase() {
+    state.phase = "SETTLE"; log("=== SETTLE PHASE ===");
+    let atk = state.attacker; let def = state.defender;
+
+    if(atk.command !== "ATTACK") { endTurnCleanup(); return; }
+
+    let totalDamage = 0; let finalAtt = getTotalAtt(atk); let effectDelay = 0;
+    if (finalAtt <= 0) { totalDamage = 0; } 
+    else {
+        if(def.command === "DODGE") {
+            let rAtk = rollD6(), rDef = rollD6(); if(atk.spow00Awim_active) rDef = Math.min(rDef, rollD6());
+            let atkSpd = Math.max(0, atk.spd + atk.tempSpd); let defSpd = Math.max(0, def.spd + def.tempSpd);
+            let scoreAtk = rAtk + atkSpd; let scoreDef = rDef + defSpd;
+            log(`🎲 Dodge Check: Atk=${scoreAtk}, Def=${scoreDef}`, 'system');
+            
+            if(scoreAtk > scoreDef) { totalDamage = finalAtt; log(`❌ Dodge failed!`); } 
+            else if (scoreDef > scoreAtk) { 
+                totalDamage = 0; def.isMissed = true; 
+                let img = document.querySelector(`#${def.id.toLowerCase()}-card-display .card-img`); if(img) img.classList.add('fx-miss');
+                log(`✅ Dodged successfully!`); effectDelay = 1000;
+            } else { log(`⚖️ Dodge Tie! Rerolling...`); setTimeout(processSettlePhase, 1000); return; }
+        } else { 
+            let finalDef = getTotalDef(def);
+            totalDamage = Math.max(1, finalAtt - finalDef);
+            log(`🛡️ Defended with DEF: ${finalDef}`);
+        }
+    }
+
+    if(totalDamage > 0) {
+        def.currentHp -= totalDamage; def.damageTaken = totalDamage; log(`💥 Takes ${totalDamage} damage!`);
+        let img = document.querySelector(`#${def.id.toLowerCase()}-card-display .card-img`); if(img) img.classList.add('fx-hit');
+        if (def.currentHp <= 0) { setTimeout(() => { if(img) img.classList.add('fx-explode'); }, 500); effectDelay = 1500; } 
+        else { effectDelay = 1000; }
+        if(def.isAsleep) { 
+            def.isAsleep = false; def.isOffline = false;
+            log(`💤 ${def.name} wakes up from damage!`); 
+        }
+    }
+
+    updateUI(); setTimeout(endTurnCleanup, effectDelay > 0 ? effectDelay : 100);
+}
+
+function endTurnCleanup() {
+    state.phase = "END"; state.subPhase = ""; 
+    [state.p1, state.p2].forEach(p => {
+        p.tempSpd = 0; p.tempAtt = 0; p.tempDef = 0; 
+        p.command = null; p.hasDashed = false; p.canDodge = false; p.isTriple = false; 
+        p.hasUsedSpow = false; p.hasUsedPassive = false; p.spow00Awim_active = false;
+        
+        p.isBug = false; 
+        p.isVirus = false;
+
+        p.isOnline = false;
+        p.isOffline = false;
+
+        if(p.isAsleep) { 
+            p.isAsleep = false; 
+            log(`💤 ${p.name} wakes up!`); 
+        } 
+    });
+    updateUI(); checkWinCondition();
+}
+
+/** 🛠️ WIN CONDITION & 21M LIMIT */
+function triggerPinkBlinkAndZen() {
+    let blinkCount = 0;
+    let overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.backgroundColor = 'transparent';
+    overlay.style.zIndex = '999999';
+    overlay.style.transition = 'background-color 0.1s ease';
+    document.body.appendChild(overlay);
+
+    let interval = setInterval(() => {
+        overlay.style.backgroundColor = (blinkCount % 2 === 0) ? '#ff66b2' : 'transparent';
+        blinkCount++;
+        if (blinkCount >= 42) { 
+            clearInterval(interval);
+            document.body.removeChild(overlay);
+            startZenMode();
+        }
+    }, 150); 
+}
+
+function checkWinCondition() {
+    if (_aiTimeout) clearTimeout(_aiTimeout);
+    let p1Dead = state.p1.currentHp <= 0; let p2Dead = state.p2.currentHp <= 0;
+    
+    if (state.gameMode === "PMATCG_PVP" || state.gameMode === "PMATCG_PVE") {
+        if(p1Dead || p2Dead) {
+            let winner = p1Dead ? state.p2 : state.p1;
+            setAction("🚨 MATCH OVER", `<h1 style="color:var(--highlight); text-align:center;">🏆 ${winner.name} WINS!</h1>`, [
+                {label: currentLang === "th" ? "🔙 ย้อนกลับหน้าเลือกตัวละคร" : "🔙 Back to Character Selection", primary: true, action: () => {
+                    document.getElementById('main-ui').style.display = 'none';
+                    pmatcgSelectionStep = 1;
+                    document.getElementById('gallery-title').innerText = langDict[currentLang].galleryTitleP1;
+                    document.getElementById('pmatcg-gallery-modal').style.display = 'flex';
+                }}
+            ]);
+        } else { nextTurnCycle(); }
+        return;
+    }
+
+    if (state.gameMode === "1V1") {
+        if(p1Dead || p2Dead) {
+            if(p1Dead) state.p2.points++; if(p2Dead) state.p1.points++;
+            updateUI();
+            if(state.p1.points >= 2 || state.p2.points >= 2) {
+                let winner = state.p1.points >= 2 ? state.p1 : state.p2;
+                let circlesHtml = winner.usedCards.map(c => `<img src="${c.img}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; object-position: center; border: 3px solid ${c.color}; margin: 0 5px; flex-shrink: 0;">`).join('');
+                let htmlStr = `
+                    <h1 style="color:var(--highlight); text-align:center; margin-bottom: 5px;">🏆 ${winner.card.name} WINS!</h1>
+                    <div style="display:flex; overflow-x:auto; justify-content:center; padding:10px; max-width: 100%;">
+                        ${circlesHtml}
+                    </div>
+                `;
+                setAction("🚨 MATCH OVER", htmlStr, [{label:"🔄 PLAY AGAIN", primary: true, action: () => location.reload()}]);
+            } else { setAction("ROUND END", "Setup next round.", [{label:"Next Round", primary: true, action: resetRound1V1}]); }
+        } else { nextTurnCycle(); }
+    } 
+    else if (state.gameMode === "TH") {
+        if(p1Dead) {
+            let defeatedCount = Math.max(0, state.thRound - 1);
+            let defeatedBots = state.p2.usedCards.slice(0, defeatedCount);
+            let imagesHtml = defeatedBots.map(c => `<img src="${c.img}" style="height: 100px; width: auto; object-fit: cover; border: 2px solid ${c.color}; border-radius: 5px; flex-shrink: 0;">`).join('');
+            
+            let htmlStr = `
+                <h1 style="color:var(--danger); text-align:center; margin-bottom: 10px;">☠️ NODE SHUTDOWN</h1>
+                <div style="text-align:center; margin-bottom:15px;">
+                    <span style="display:inline-block; padding:8px 20px; border:2px solid #fff; border-radius:10px; font-size:1.5em; font-weight:bold; color:#ff66b2; animation:rainbowGlow 1s infinite;">
+                        คุณชนะไปได้: ${defeatedCount}
+                    </span>
+                </div>
+                <div style="display:flex; overflow-x:auto; gap:10px; padding:10px; max-width:100%; white-space:nowrap; scrollbar-width:thin;">
+                    ${imagesHtml}
+                </div>
+            `;
+            setAction("🚨 GAME OVER", htmlStr, [{label:"🔄 TRY AGAIN", primary: true, action: () => location.reload()}]);
+        } else if (p2Dead) {
+            if (state.thRound >= 21000000) {
+                // 21M Wins - Trigger Blink and Zen Mode
+                document.getElementById('action-title').innerHTML = "🌟 MAX SCORE REACHED!";
+                document.getElementById('action-desc').innerHTML = `<h1 style="color:var(--highlight); text-align:center;">🏆 LEGENDARY HERO!</h1><p style="text-align:center;">คุณล้ม Node ได้สูงสุด 21,000,000 ตัว!</p>`;
+                document.getElementById("action-buttons").innerHTML = ""; // Clear buttons
+                
+                triggerPinkBlinkAndZen();
+            } else {
+                state.thRound++;
+                document.getElementById('p2-points').innerText = `Round ${state.thRound}/21000000`;
+                setAction("🎉 ROUND CLEARED", `กำลังโหลดข้อมูลเป้าหมายถัดไป... (Wave ${state.thRound}/21000000)`, [{label:"Next Battle ➡️", primary: true, action: resetRoundTH}]);
+            }
+        } else { nextTurnCycle(); }
+    }
+}
+
+function nextTurnCycle() {
+    let temp = state.attacker; state.attacker = state.defender; state.defender = temp;
+    
+    if (state.attacker.id === "P2" && state.gameMode !== "PMATCG_PVP") {
+        setAction("Turn End", `🤖 AI is preparing its turn...`, []); _aiTimeout = setTimeout(() => startTurnPhase(state.attacker, "ATTACK"), 1200);
+    } else { 
+        setAction("Turn End", `${state.attacker.name} is now the Attacker.`, [{label: "Start Next Turn", primary: true, action: () => startTurnPhase(state.attacker, "ATTACK")}]); 
+    }
+}
+
+function resetRound1V1() {
+    state.p1.isMissed = false; state.p1.damageTaken = null; state.p2.isMissed = false; state.p2.damageTaken = null;
+    loadCard("p1", drawCardFromPool()); loadCard("p2", drawCardFromPool()); syncPhase();
+}
+
+function resetRoundTH() {
+    state.p1.isMissed = false; state.p1.damageTaken = null; state.p2.isMissed = false; state.p2.damageTaken = null;
+    state.p1.currentHp = state.p1.maxHp; state.p1.isAsleep = false; state.p1.isBug = false; state.p1.isMuted = false; state.p1.isOverheat = false; state.p1.is51Att = false; state.p1.isVirus = false;
+    loadCard("p2", drawCardFromPool()); syncPhase();
+}
+
+/** * ==========================================
+ * 📂 UI ENGINE & DEBUFF UI
+ * ==========================================
+ */
+function log(msg, type = "system") {
+    const box = document.getElementById("log-box");
+    box.appendChild(Object.assign(document.createElement("div"), { className: `log-entry log-${type}`, innerHTML: msg }));
+    box.scrollTop = box.scrollHeight;
+}
+
+window.toggleLog = function() {
+    const wrapper = document.getElementById("log-wrapper");
+    const icon = document.getElementById("log-toggle-icon");
+    wrapper.classList.toggle("collapsed");
+    if (wrapper.classList.contains("collapsed")) {
+        icon.innerText = "▲";
+    } else {
+        icon.innerText = "▼";
+        const box = document.getElementById("log-box");
+        box.scrollTop = box.scrollHeight;
+    }
+};
+
+window.toggleStatusLegend = function(e) {
+    if(e) e.stopPropagation();
+    const box = document.getElementById("status-legend-box");
+    if (box.style.display === "none" || box.style.display === "") {
+        box.style.display = "block";
+    } else {
+        box.style.display = "none";
+    }
+};
+
+window.toggleDebuff = function(pId) {
+    if (state[pId]) {
+        state[pId].showDebuffText = !state[pId].showDebuffText;
+        updateUI();
+    }
+};
+
+function generateCardHTML(p) {
+    let statusHtml = p.currentHp <= 0 ? `<span class="status-badge badge-dead">☠️Shut down</span>` : 
+                    (p.isOnline ? `<span class="status-badge badge-online">ONLINE</span>` : 
+                    (p.isOffline ? `<span class="status-badge badge-offline">OFFLINE</span>` : `<span class="status-badge badge-standby">STANDBY</span>`));
+
+    let spowNameHtml = p.hasUsedSpow ? (p.hasDashed ? `<span class="bpow-rainbow" style="font-size:0.9em; font-weight:bold; font-style:italic;">${p.card.spowName}</span>` 
+                                                    : `<span style="font-size:0.9em; color:#ff00ff; text-shadow:0 0 10px #ff00ff; font-weight:bold; font-style:italic;">${p.card.spowName}</span>`) : "";
+    
+    let debuffsHtml = [];
+    if (p.isAsleep) debuffsHtml.push(`<span style="background:lightblue; color:#000; padding:2px 5px; border-radius:4px; font-size:1em; margin:1px;">💤 ${p.showDebuffText ? 'Asleep' : ''}</span>`);
+    if (p.isBug) debuffsHtml.push(`<span style="background:lightblue; color:#000; padding:2px 5px; border-radius:4px; font-size:1em; margin:1px;">🐞 ${p.showDebuffText ? 'Bug' : ''}</span>`);
+    if (p.isMuted) debuffsHtml.push(`<span style="background:lightcoral; color:#000; padding:2px 5px; border-radius:4px; font-size:1em; margin:1px;">🔕 ${p.showDebuffText ? 'Muted' : ''}</span>`);
+    if (p.isOverheat) debuffsHtml.push(`<span style="background:lightcoral; color:#000; padding:2px 5px; border-radius:4px; font-size:1em; margin:1px;">📛 ${p.showDebuffText ? 'Overheat' : ''}</span>`);
+    if (p.is51Att) debuffsHtml.push(`<span style="background:lightgreen; color:#000; padding:2px 5px; border-radius:4px; font-size:1em; margin:1px;">☸️ ${p.showDebuffText ? '51%Att' : ''}</span>`);
+    if (p.isVirus) debuffsHtml.push(`<span style="background:#99cc00; color:#000; padding:2px 5px; border-radius:4px; font-size:1em; margin:1px;">🦠 ${p.showDebuffText ? 'Virus' : ''}</span>`);
+
+    let statusBoxHtml = `<span style="color:#666; font-size:0.8em;">Normal</span>`;
+    if (debuffsHtml.length > 0) {
+        let innerHtml = debuffsHtml.join('');
+        statusBoxHtml = `<div onclick="window.toggleDebuff('${p.id.toLowerCase()}')" style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; background:#222; padding:2px; border-radius:4px; cursor:pointer; border: 1px solid #555; user-select:none;">${innerHtml}</div>`;
+    }
+
+    let currentSpd = p.spd === "?" ? "?" : Math.max(0, p.spd + p.tempSpd); 
+    let currentTotalAtt = p.att === "?" ? "?" : getTotalAtt(p); 
+    let currentDef = p.def === "?" ? "?" : getTotalDef(p);
+    let hpDisplay = p.currentHp === "?" ? "?" : Math.max(0, p.currentHp);
+    
+    const getColorStyle = (cur, base) => (cur !== "?" && base !== "?" && cur > base) ? "color: #00ff66; font-weight: bold;" : (cur !== "?" && base !== "?" && cur < base) ? "color: var(--danger); font-weight: bold;" : "";
+    
+    let skillText = "";
+    if (p.card.passiveDesc) skillText += `<div class="${p.hasUsedPassive ? 'skill-activated':''}"><b>Passive:</b> ${p.card.passiveDesc}</div>`;
+    if (p.card.spowDesc) skillText += `<div class="${p.hasUsedSpow ? 'skill-activated':''}"><b>SPoW (-${p.card.spowCost} PoW):</b> ${p.card.spowDesc}</div>`;
+
+    let bpowEmoji = p.isOnline ? "🔋" : "🪫";
+    let bpowClass = "bpow-display"; let bpowText = `${bpowEmoji} BPoW: ${p.bpow}`;
+    if (p.isMissed) { bpowText = "MISS!!"; bpowClass += " bpow-rainbow"; } 
+    else if (p.damageTaken) { bpowText = `❤️‍🔥 ${p.damageTaken}`; bpowClass += " bpow-damage"; bpowClass += p.damageTaken > Math.ceil((p.maxHp==="?"?0:p.maxHp) / 2) ? " dmg-blink-fast" : " dmg-blink-slow"; } 
+    else if (p.command === "ATTACK" && p.hasUsedSpow && p.hasDashed) { bpowClass += " bpow-rainbow"; } 
+    else if (p.isOnline) { bpowClass += " bpow-online"; }
+
+    let spowColor = p.hasUsedSpow ? p.card.color : "#555"; let roleBadgeHtml = ""; let fxAttackClass = "";
+    if (state.attacker?.id === p.id) { roleBadgeHtml = `<div class="role-badge role-attacker">⚔️ ATTACKER</div>`; if(p.command === "ATTACK") fxAttackClass = (p.hasUsedSpow && p.hasDashed) ? "attack-lvl3" : p.hasUsedSpow ? "attack-lvl2" : "attack-lvl1"; }
+    else if (state.defender?.id === p.id) { roleBadgeHtml = `<div class="role-badge role-defender">🛡️ DEFENDER</div>`; }
+
+    return `
+        <div class="card ${p.isOnline ? 'online' : p.isOffline ? 'offline' : 'standby'} ${fxAttackClass}" style="border-color: ${p.card.color}; ${p.isTriple ? `background: linear-gradient(135deg, rgba(42,42,42,0.8) 0%, ${p.card.color} 100%);` : ''}">
+            ${roleBadgeHtml} 
+            <h4 style="margin:0; font-size: 0.95em;">${p.card.name}</h4>
+            <div style="font-size: 0.8em; color: #aaa; margin-bottom: 5px;">${p.card.codecard || "---"} | BH: ${p.card.BH || "---"}</div>
+            
+            <div class="card-img-container"><img src="${p.card.img}" class="card-img" onerror="this.style.display='none'"><div class="fx-text"></div></div>
+            
+            <div style="display:flex; justify-content:center; gap:8px; margin-bottom:8px;">
+                <div class="${bpowClass}">${bpowText}</div> <div style="background:#111; padding:3px 8px; border-radius:4px; font-weight:bold; color:var(--highlight); border:1px solid #333;">⚡ PoW: ${p.pow}</div>
+            </div>
+            <div style="display:flex; justify-content:center; gap:8px; margin-bottom:5px; min-height:20px;">${statusHtml} ${spowNameHtml}</div>
+            <div class="stats">
+                <div class="stat-item stat-spow" style="color:${spowColor}; border:1px solid ${spowColor};">✨ SPoW: ${p.card.spowCost}</div>
+                <div class="stat-item stat-hp">❤️ HP: <span style="${getColorStyle(p.currentHp, p.maxHp)}">${hpDisplay}</span>/${p.maxHp}</div>
+                <div class="stat-item stat-spd">🥾 SPD: <span style="${getColorStyle(currentSpd, p.spd)}">${currentSpd}</span></div>
+                <div class="stat-item stat-att">⚔️ ATT: <span style="${getColorStyle(currentTotalAtt, p.att)}">${currentTotalAtt}</span></div>
+                <div class="stat-status">${statusBoxHtml}</div>
+                <div class="stat-item stat-def">🛡️ DEF: <span style="${getColorStyle(currentDef, p.def)}">${currentDef}</span></div>
+            </div>
+            ${skillText ? `<div class="skill-box" style="border-left: 3px solid ${p.card.color};">${skillText}</div>` : ""}
+        </div>
+    `;
+}
+
+function renderCard(pId) {
+    const p = state[pId]; const container = document.getElementById(`${pId.toLowerCase()}-card-display`);
+    if (!p.card) return;
+    container.innerHTML = generateCardHTML(p);
+    if(state.gameMode === "1V1") document.getElementById(`${pId.toLowerCase()}-points`).innerText = `${p.points}/2 Pts`;
+}
+
+function renderDice(pId) {
+    const p = state[pId]; const container = document.getElementById(`${pId.toLowerCase()}-dice`); container.innerHTML = "";
+    p.dice.forEach((d) => {
+        const div = document.createElement("div"); div.className = `die ${d.used ? 'used' : ''} ${d.selected ? 'selected' : ''}`; div.innerText = d.val;
+        div.onclick = () => { if(!d.used && state.subPhase === "ACTIVATE" && state.activePlayer === p && (p.id !== "P2" || state.gameMode === "PMATCG_PVP")) { d.selected = !d.selected; renderDice(pId); updateActivateUI(); }};
+        container.appendChild(div);
+    });
+}
+
+function updateUI() { renderCard("p1"); renderCard("p2"); renderDice("p1"); renderDice("p2"); }
+
+function updateActivateUI() {
+    const p = state.activePlayer; let sum = p.dice.filter(d => d.selected && !d.used).reduce((s, d) => s + d.val, 0);
+    setAction(`Phase 3: Activate Node (${p.name})`, `Total PoW will be: <b>${p.pow + sum}</b> / BPoW Cost: ${p.bpow}`, [
+        { label: "Confirm & Activate", primary: true, action: () => confirmActivate(p, sum) }
+    ]);
+}
+
+function setAction(title, desc, buttons) {
+    document.getElementById("action-title").innerHTML = title; document.getElementById("action-desc").innerHTML = desc;
+    const btnContainer = document.getElementById("action-buttons"); btnContainer.innerHTML = "";
+    
+    const isBot = (state.activePlayer?.id === "P2" && state.phase === "TURN" && state.gameMode !== "PMATCG_PVP");
+    
+    buttons.forEach(b => {
+        const btn = document.createElement("button"); btn.className = `btn ${b.primary ? 'primary' : ''}`; btn.innerText = b.label;
+        btn.onclick = () => { btnContainer.querySelectorAll('.btn').forEach(el => el.disabled = true); b.action(); };
+        btn.disabled = b.disabled || isBot; btnContainer.appendChild(btn);
+    });
+    updateUI();
+    if (isBot) { document.getElementById("action-title").innerHTML += ' <span style="color: #ff3366;">[AI Thinking...]</span>'; if (_aiTimeout) clearTimeout(_aiTimeout); _aiTimeout = setTimeout(() => AIEngine.processTurn(), 1000); }
+}
+</script>
+</body>
+</html>
