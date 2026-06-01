@@ -313,6 +313,9 @@
 </head>
 <body>
 
+    <audio id="bgm-audio" loop src="song101.mp3"></audio>
+    <button id="mute-btn" onclick="toggleMute()" style="position: fixed; bottom: 20px; left: 20px; z-index: 200000; background: rgba(0,0,0,0.6); color: white; border: 1px solid var(--highlight); padding: 10px; border-radius: 50%; width: 50px; height: 50px; font-size: 1.2em; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);">🔊</button>
+
     <div id="quote-splash-screen" class="fullscreen-screen" style="display:flex; background-color: #000; z-index: 200000; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; transition: opacity 0.3s;">
         <div style="display: flex; flex-direction: column; align-items: stretch; max-width: 90%; width: 100%;">
             <div id="splash-main-text" style="color: #ff1493; font-size: 3.5rem; font-weight: bold; text-align: center; margin-bottom: 10px; word-break: keep-all;">What Is Money?</div>
@@ -983,7 +986,7 @@
             
             <div class="th-input-group">
                 <label id="th-l1">1. BTC Block Height (0 - 9999999)</label>
-                <input type="number" id="th-height" placeholder="เช่น 851294" min="0" max="9999999">
+                <input type="number" id="th-height" placeholder="เช่น 801537" min="0" max="9999999">
                 <small id="th-s1" style="color: #888;">(หน่วย=HP, สิบ=ATT, ร้อย=DEF)</small>
             </div>
             
@@ -1019,7 +1022,7 @@
                     <option value="overheat">SPoW2 (จ่าย PoW2) : Target Node become Overheat(📛)(This Node cannot use Overclock. Cleared when Offline.)</option>
                     <option value="51att">SPoW3 (จ่าย PoW3) : Target Node become 51%Att(☸️)(Whenever this Node goes Offline, it immediately takes 1 damage. Cleared when Online.)</option>
                     <option value="bug_any">SPoW4 (จ่าย PoW4) : Target Node become Bug (🐞)(Swap this Node's ATT and DEF Cleared when Clear phase)</option>
-                    <option value="virus">SPoW5 (จ่าย PoW5) : Target Node become virus (🦠) (สุ่ม 1 สถานะ: 1=Overheat(📛), 2=Muted(🔕), 3=51%Att(☸️), 4=Bug(🐞), 5=Asleep(💤), 6=ไม่มีผล)</option>
+                    <option value="virus">SPoW4 (จ่าย PoW4) : Target Node become virus (🦠) (สุ่ม 1 สถานะ: 1=Overheat(📛), 2=Muted(🔕), 3=51%Att(☸️), 4=Bug(🐞), 5=Asleep(💤), 6=ไม่มีผล)</option>
                     <option value="asleep">SPoW6 (จ่าย PoW6) Target Node become Asleep(💤) : This Node becomes Offline. Cancel its attack if it is currently attacking. It Wakes Up (removes Offline status) if it takes damage. Cleared when Clear phase.</option>
                 </select>
             </div>
@@ -1085,6 +1088,49 @@
     </div>
 
 <script>
+
+/** * ==========================================
+ * 🎵 BGM AUDIO MANAGER
+ * ==========================================
+ */
+let isUserMuted = false;
+let bgmStarted = false;
+
+function toggleMute() {
+    let bgm = document.getElementById('bgm-audio');
+    let btn = document.getElementById('mute-btn');
+    if (bgm.muted) {
+        bgm.muted = false;
+        isUserMuted = false;
+        btn.innerText = "🔊";
+        if (!bgmStarted) {
+            bgm.play().catch(e => console.log("Audio play blocked by browser:", e));
+            bgmStarted = true;
+        }
+    } else {
+        bgm.muted = true;
+        isUserMuted = true;
+        btn.innerText = "🔇";
+    }
+}
+
+function playBGM() {
+    let bgm = document.getElementById('bgm-audio');
+    if (!isUserMuted) {
+        bgm.play().then(() => {
+            bgmStarted = true;
+        }).catch(e => {
+            console.log("Audio play blocked by browser. Will start on first interaction.", e);
+            document.body.addEventListener('click', function startAudioOnInteract() {
+                if(!isUserMuted && !bgmStarted) {
+                    bgm.play();
+                    bgmStarted = true;
+                }
+                document.body.removeEventListener('click', startAudioOnInteract);
+            }, { once: true });
+        });
+    }
+}
 
 /** * ==========================================
  * 🌸 MODULE SPLASH SCREEN
@@ -1192,6 +1238,9 @@ const zenData = {
 let currentZenStage = 1;
 
 function startZenMode() {
+    let bgm = document.getElementById('bgm-audio');
+    bgm.pause();
+
     document.getElementById('cover-screen').style.display = 'none';
     document.getElementById('main-ui').style.display = 'none';
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
@@ -1222,6 +1271,11 @@ function startZenMode() {
 }
 
 function exitZenMode() {
+    let bgm = document.getElementById('bgm-audio');
+    if (!isUserMuted) {
+        bgm.play().catch(e => console.log(e));
+    }
+
     document.getElementById('zen-mode-container').style.display = 'none';
     document.getElementById('cover-screen').style.display = 'flex';
 }
@@ -1406,7 +1460,7 @@ const langDict = {
             <option value="overheat">SPoW2 (จ่าย PoW2) : Target Node become Overheat(📛)(This Node cannot use Overclock. Cleared when Offline.)</option>
             <option value="51att">SPoW3 (จ่าย PoW3) : Target Node become 51%Att(☸️)(Whenever this Node goes Offline, it immediately takes 1 damage. Cleared when Online.)</option>
             <option value="bug_any">SPoW4 (จ่าย PoW4) : Target Node become Bug (🐞)(Swap this Node's ATT and DEF Cleared when Clear phase)</option>
-            <option value="virus">SPoW5 (จ่าย PoW5) : Target Node become virus (🦠) (สุ่ม 1 สถานะ: 1=Overheat(📛), 2=Muted(🔕), 3=51%Att(☸️), 4=Bug(🐞), 5=Asleep(💤), 6=ไม่มีผล)</option>
+            <option value="virus">SPoW4 (จ่าย PoW4) : Target Node become virus (🦠) (สุ่ม 1 สถานะ: 1=Overheat(📛), 2=Muted(🔕), 3=51%Att(☸️), 4=Bug(🐞), 5=Asleep(💤), 6=ไม่มีผล)</option>
             <option value="asleep">SPoW6 (จ่าย PoW6) Target Node become Asleep(💤) : This Node becomes Offline. Cancel its attack if it is currently attacking. It Wakes Up (removes Offline status) if it takes damage. Cleared when Clear phase.</option>
         `,
         thHashNumOptions: `
@@ -1506,7 +1560,7 @@ const langDict = {
             <option value="overheat">SPoW2(Pay 2 PoW) : Target Node becomes Overheat(📛)</option>
             <option value="51att">SPoW3(Pay 3 PoW) : Target Node becomes 51%Att(☸️)</option>
             <option value="bug_any">SPoW4(Pay 4 PoW) : Target Node becomes Bug(🐞)</option>
-            <option value="virus">SPoW5(Pay 5 PoW) : Target Node becomes Virus(🦠)</option>
+            <option value="virus">SPoW4(Pay 4 PoW) : Target Node becomes Virus(🦠)</option>
             <option value="asleep">SPoW6(Pay 6 PoW) : Target Node becomes Asleep(💤)</option>
         `,
         thHashNumOptions: `
@@ -1586,6 +1640,11 @@ let isGeneratingForPMATCG = false;
 let pmatcgTargetButton = null;
 
 window.onload = function() {
+    // 🌸 BGM Auto-start 🌸
+    setTimeout(() => {
+        playBGM();
+    }, 3000);
+
     // 🌸 Initial Boot Splash Screen 🌸
     setTimeout(() => {
         const splash = document.getElementById('quote-splash-screen');
@@ -1913,7 +1972,7 @@ function generateTimechainHeroCard() {
     else if(spowChoice === "overheat") { spowCost = 2; spowDescStr = "Target becomes Overheat (📛)"; }
     else if(spowChoice === "51att") { spowCost = 3; spowDescStr = "Target becomes 51%Att (☸️)"; }
     else if(spowChoice === "bug_any") { spowCost = 4; spowDescStr = "Target becomes Bug (🐞)"; }
-    else if(spowChoice === "virus") { spowCost = 5; spowDescStr = "Target becomes Virus (🦠) & random status"; }
+    else if(spowChoice === "virus") { spowCost = 4; spowDescStr = "Target becomes Virus (🦠) & random status"; }
     else if(spowChoice === "asleep") { spowCost = 6; spowDescStr = "Target becomes Asleep (💤)"; }
 
     let customCard = {
